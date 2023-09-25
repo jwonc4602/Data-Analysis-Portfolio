@@ -5,6 +5,7 @@ This repository is a personal space for storing and organizing my data analysis 
 Implemented the HP filter(Hodrick–Prescott filter) decomposition of quarterly RGDP data {Q1 1983 – Q4 2022} in the U.S from [FRED website](http://research.stlouisfed.org/fred2/).
 
 Real GDP and HP Trend
-<img width="80%" src="Images/Real GDP and HP Trend.png"/>
+<img width="100%" src="Images/Real GDP and HP Trend.png"/>
+
 Real GDP: Deviations from HP Trend
-<img width="80%" src="Images/Real GDP- Deviations from HP Trend.png"/>
+<img width="100%" src="Images/Real GDP- Deviations from HP Trend.png"/>
