@@ -1,0 +1,349 @@
+---
+title: "The Lasting Shadows of Economic Downturns"
+subtitle: "Unveiling the 1980–1982 Recession's Long-Run Effects on Unemployment, Personal Income and Business Pattern in America"
+author: "Heyucheng Zhang, Jiwon Choi"
+thanks: "Code and data are available at: https://github.com/jwonc4602/Long-Run-Impacts-of-Recession. A replication of various aspects in this paper are available at: https://doi.org/10.48152/ssrp-6wty-7643"
+date: "15 February 2024"
+date-format: "D MMMM YYYY"
+abstract: "This study examines the long-term impacts of the 1980–1982 recession, focusing on changes in unemployment rates and personal income in America to assess how economic downturns influence decisions regarding business patterns and human capital investment. Our analysis of historical data reveals that the recession had enduring negative effects on employment and income levels, suggesting that such economic challenges may lead individuals to another business trends as a means to improve their marketability and financial stability. These findings emphasizes the importance of incorporating long-term considerations into economic policy-making, highlighting the need for strategies that mitigate the adverse effects of recessions while fostering investment in human capital."
+format: pdf
+toc: true
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#### Workspace set up ####
+# install.packages("tidyverse")
+# install.packages("knitr")
+# install.packages("here")
+# install.packages("janitor")
+# install.packages("kableExtra")
+
+library(tidyverse) # data-related packages
+library(knitr) # make tables
+library(here) # manage file paths
+library(janitor) # clean data
+library(kableExtra) # table-related packages
+
+#### Read in cleaned data ####
+cleaned_unemployment <- read_csv(file = here("outputs/data/cleaned_unemployment.csv"), show_col_types = FALSE)
+cleaned_four_states <- read_csv(file = here("outputs/data/cleaned_four_states.csv"), show_col_types = FALSE)
+cleaned_personal_income <- read_csv(file = here("outputs/data/cleaned_personal_income.csv"), show_col_types = FALSE)
+cleaned_bussiness_pattern1 <- read_csv(file = here("outputs/data/cleaned_bussiness_pattern1.csv"), show_col_types = FALSE)
+cleaned_bussiness_pattern2 <- read_csv(file = here("outputs/data/cleaned_bussiness_pattern2.csv"), show_col_types = FALSE)
+```
+
+# Introduction
+
+This reproduction was performed after a replication on the Social Science Reproduction platform: [**link here**](https://doi.org/10.48152/ssrp-6wty-7643)
+
+This paper, titled "The Lasting Shadows of Economic Downturns," investigates the long-term impacts of the 1980–1982 recession on unemployment, personal income, and business patterns in the United States by replicating Stuart's original paper [@10.1257/app.20180055]. Despite extensive research on the immediate effects of recessions, the enduring consequences on the economic landscape warrant further exploration. Our study addresses this gap by analyzing historical data from the Bureau of Economic Analysis [@BEA] and the Bureau of Labor Statistics [@BLS] to assess how the recession has influenced employment rates, income levels, and the structure of business activities over time.
+
+The specific estimands of this study are defined as follows:
+
+- The Long-term Impact on Unemployment Rates: We aim to quantify the enduring effect of the 1980–1982 recession on unemployment rates in the United States, exploring how these rates have been influenced over an extended period beyond the immediate aftermath of the recession.
+- The Enduring Effect on Personal Income Levels: This study seeks to measure the long-term impact of the recession on personal income levels, examining changes in income distribution and average income over time to understand the recession’s lasting influence on financial well-being.
+- Changes in Business Patterns due to the Recession: We estimate how the structure and distribution of businesses, including sectoral composition and employment types, have evolved in the long-term aftermath of the recession, reflecting the economic shifts and adjustments that have occurred.
+
+We focus on the 1980–1982 recession by leveraging the programming language R [@citeR] and its various statistical tools for data simulation, cleaning, and testing part. Due to the recession's significant economic disruption, aiming to understand its prolonged effects on the American economy. Our analysis reveals that the recession led to lasting negative outcomes in employment and personal income, alongside shifts in business patterns that have implications for future economic strategies and policy-making. These findings emphasize the need for economic policies that consider the long-term ramifications of downturns on the labor market and financial stability.
+
+The importance of this research lies in its contribution to a deeper understanding of the long-term effects of recessions. It suggests that economic recovery efforts should account for potential lasting changes in the economy, advocating for a strategic approach to policy development that mitigates long-term adverse effects.
+
+The structure of the paper is straightforward: following this introduction, we detail our data sources and methodology. The results section outlines our main findings, followed by a discussion on their implications for economic theory and policy-making. We conclude by acknowledging the study's limitations and proposing directions for future research. This structure is designed to provide a comprehensive overview of our study, offering clear insights into the lasting impacts of the 1980–1982 recession.
+
+# Data
+This paper replicates and extends the analyses from the original paper, 'The Long-Run Effects of Recessions on Education and Income' [@10.1257/app.20180055] by using a range of datasets obtained from various publicly accessible sources. Stuart has categorized the datasets into distinct files, reflecting their respective roles in the analysis.
+
+## Sources
+We used data from two sources for our research. First, we utilized data from the Bureau of Economic Analysis (BEA) Regional Economic Accounts[@BEA]. These datasets were downloaded in March 2015 from <https://apps.bea.gov/regional/downloadzip.cfm> by Stuart. The BEA occasionally revises the methodology used to generate these data, and accordingly, updates all files to reflect these changes. As a result, data downloaded on subsequent dates might present some variations. The datasets of particular interest included 'CA1: Personal Income Summary: Personal Income, Population, Per Capita Personal Income', which covers Personal Income, Population, and Per Capita Personal Income, and 'CA25: Total Full-Time and Part-Time Employment by SIC Industry', offering detailed insights into income components and industry-specific earnings.
+
+Second, we obtained unemployment data for the years 1976-1989 which Stuart obtained through email communication with Brian Hannon of the BLS from the Bureau of Labor Statistics (BLS) Local Area Unemployment Statistics [@BLS]. This data, covering various counties, is compiled in the file 'BLS_all_archived_counties7689aa (UNOFFICIAL).xlsx' and is available through the Inter-university Consortium for Political and Social Research.
+
+The datasets 'CA1_1969_2013_ALL.csv' and 'CA25_1969_2000_ALL.csv' from the BEA, along with the 'BLS_all_archived_counties7689aa (UNOFFICIAL).xlsx' from the BLS are crucial for analyzing personal income, business patterns, and unemployment trends in our study.
+
+## Methodology and Measurement
+The data collection methodology is designed to analyze unemployment, personal income, and business trends comprehensively. Data was collected and analyzed using R statistical programming software [@citeR], with additional packages like `tidyverse` [@tidyverse], `ggplot2` [@ggplot], `dplyr` [@dplyr], `readxl` [@readxl], `tibble` [@tibble], `janitor` [@janitor], `knitr` [@knitr], and `here` [@here] for support. The data is mainly numeric such as unemployment rate, personal income per capita, or counting the number of each employment type and business type.
+
+For the specific measurement of this project, we first have unemployment rates were quantified as percentages of the active labor force without employment but seeking work. Data was sourced from 'BLS_all_archived_counties7689aa (UNOFFICIAL).xlsx', focusing on the most populous states: California, Florida, New York, and Texas. Initial cleaning standardized the data for consistency across these states. Personal income per capita measurements, derived from 'CA1_1969_2013_ALL.csv', represent average income per person in dollars for the period 1979-1989. This indicator was adjusted for inflation to ensure temporal comparability. Business trends were assessed through two aspects: employment and business types. Employment types were categorized into three main groups to analyze sector-specific employment trends. Business types were segmented to evaluate the distribution and evolution of various sectors. Both approaches aimed to capture shifts and patterns relevant to economic analysis. More detailed data samples are below.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-first-cleaned-unemployment-data
+#| tbl-cap: Sample of First Cleaned Unemployment Data
+kable(head(cleaned_unemployment, 30), format = "latex", booktabs = TRUE, align = "c") |>
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-cleaned-unemployment-data-focusing-four-states
+#| tbl-cap: Sameple of Cleaned Unemployment Data Focusing Four Most Populated States
+cleaned_four_states %>% 
+  head(17) %>%  # Select the first 12 rows
+  kable(format = "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), font_size = 7, full_width = FALSE)
+```
+Initial data cleaning from 'BLS_all_archived_counties7689aa (UNOFFICIAL).xlsx' focused on nationwide unemployment rates (see @tbl-first-cleaned-unemployment-data), but due to the breadth of data, the study narrowed its focus to the four most populous states in the USA: California, Florida, New York, and Texas (see @tbl-cleaned-unemployment-data-focusing-four-states).
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-personal-income
+#| tbl-cap: Cleaned Personal Income Per Capita in Dollars
+cleaned_personal_income %>%
+  head(12) %>%  # Select the first 12 rows
+  kable(format = "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+The dataset 'CA1_1969_2013_ALL.csv' was employed to extract data on per capita personal income (in dollars) from 1969 to 2013. For alignment with the unemployment rate data, analysis was limited to the period 1979 to 1989. The sample encompasses only the initial 17 rows of the dataset (see @tbl-personal-income).
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-cleaned-business-pattern-by-employment-type
+#| tbl-cap: Sample of Cleaned Business Pattern Data by Employment Type
+kable(head(cleaned_bussiness_pattern1, 10), format = "latex", booktabs = TRUE, align = "c") |>
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-sample-of-cleaned-business-patterns-data-by-business-type
+#| tbl-cap: Sample of Cleaned Business Pattern Data by Business Type
+cleaned_bussiness_pattern2 %>%
+  select(1:5) %>%  # Select the first 7 columns
+  head(10) %>%  # Then select the first 10 rows
+  kable(format = "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+To analyze business patterns within the dataset "CA25_1969_2000_ALL.csv," we employed two distinct approaches to clean and segment the data. The first approach focused on categorizing the data based on types of employment (see @tbl-cleaned-business-pattern-by-employment-type), which was cleaned and organized to highlight three employment categories. The cleaning process involved removing irrelevant entries, correcting data inconsistencies, and categorizing employment types. This analysis aims to uncover employment trends and patterns within the dataset.
+
+The second approach concentrated on classifying the data according to business types (see @tbl-sample-of-cleaned-business-patterns-data-by-business-type). The data was filtered and structured to emphasize different business types. This involved a detailed cleaning process to ensure the accuracy and relevance of the business categories. The objective of this analysis is to identify business distribution and trends across different sectors represented in the dataset.
+
+# Results
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-avaerage-unemployment-rate-for-four-major-states
+#| fig-cap: Average Unemployment for Four Major States
+### the line graphs of average unemployment rate by four most populated states###
+plot_data1 <-
+  cleaned_four_states  |>
+  select(year, state_name, average_unemployment_rate) |>
+  arrange(year, state_name)
+
+# Define custom colors for each state
+state_colors <- c("California" = "red", "Florida" = "green", "New York" = "blue", "Texas" = "yellow")
+
+# Create a line plot with custom styles
+plot1 <- ggplot(plot_data1, aes(x = year, y = average_unemployment_rate, color = state_name)) +
+  geom_line(size = 1) +
+  scale_color_manual(values = state_colors) + # Set custom colors for lines
+  geom_vline(xintercept = 1980, linetype="dashed", color = "red", size = 1) +
+  geom_vline(xintercept = 1982, linetype="dashed", color = "red", size = 1) +
+  annotate("text", x = 1980, y = max(plot_data1$average_unemployment_rate), label = "Recession Start", vjust = 2) +
+  annotate("text", x = 1982, y = max(plot_data1$average_unemployment_rate), label = "Recession End", vjust = -0.5) +
+  labs(title = "Average Unemployment Rate by Four Most Populated States and Year",
+       x = "Year", y = "Average Unemployment Rate") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5), # Center the plot title
+        axis.text.x = element_text(angle = 45, hjust = 1), # Rotate x-axis labels (optional)
+        legend.position = "bottom") # Move legend to the bottom
+
+# Display the plot
+print(plot1)
+
+```
+
+@fig-avaerage-unemployment-rate-for-four-major-states represents the average unemployment rate trends across the four most populous states in the U.S.—California, Florida, New York, and Texas—over a series of years. The data is arranged in chronological order and the unemployment rate is differentiated by state using custom colors: red for California, green for Florida, blue for New York, and yellow for Texas. 
+
+Two vertical dashed red lines indicate the start (1980) and end (1982) of a recession period, providing context for the fluctuations in unemployment rates. During the indicated recession period, there is a visible increase in unemployment rates across all states, with the peak rates occurring at or near the end of this period. The rates diverge for different states both during and after the recession, indicating variable economic recovery speeds and perhaps differences in state-level policies or economic structures. Peak unemployment rates during this period were approximately 10% for California, 9% for both Florida and New York, and 7% for Texas. Following the recession, unemployment rates decreased at varying speeds.
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-change-of-unemployment-for-four-major-states
+#| fig-cap: Change of Unemployment Rate for Four Major States
+### the bar graph change of unemployment for four major states ###
+### something like simulated plot2 ###
+plot_data2 <-
+  cleaned_four_states  |>
+  select(year, state_name, average_unemployment_rate) |>
+  arrange(year, state_name) |>
+  filter(year %in% c(1976, 1982, 1989))
+
+# Define custom colors for the years
+year_colors <- c("1976" = "green", "1982" = "red", "1989" = "blue")
+
+# Create a bar plot with custom styles
+plot2 <- ggplot(plot_data2, aes(x = state_name, y = average_unemployment_rate, fill = as.factor(year))) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  scale_fill_manual(values = year_colors) +  # Set custom colors for bars
+  labs(title = "Change of Unemployment for Four Major States",
+       x = "State", y = "Change in Unemployment Rate") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the plot title
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels (optional)
+    legend.position = "bottom"  # Move legend to the bottom
+  )
+
+# Display the plot
+print(plot2)
+```
+
+@fig-change-of-unemployment-for-four-major-states exhibits a bar chart detailing the changes in unemployment rates for California, Florida, New York, and Texas at three key points: 1978, 1982, and 1989, represented in red, green, and blue, respectively. Between 1978 and 1982, California experienced an increase in the unemployment rate of approximately 3 percentage points, followed by a decrease of 2 percentage points by 1989. Florida and New York display similar patterns, with increases of around 2.5 and 3 percentage points, respectively, from 1978 to 1982, and subsequent decreases by 1989 — 1.5 percentage points for Florida and 2 percentage points for New York. Texas shows an atypical pattern with a slight decrease of 0.5 percentage points from 1978 to 1982 and an increase of 1 percentage point by 1989.
+
+The data for 1982, marking the recession's end, highlights elevated unemployment rates for California, Florida, and New York when compared to their 1978 figures. In contrast, Texas shows a decrease during this period. By 1989, unemployment rates in all states except Texas had dropped below their 1982 levels, indicating recovery from the recession's peak. These statistics reveal distinct economic conditions and responses across the four major states during the given timeframe.
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-personal-income-per-capita-by-year
+#| fig-cap: Change of Personal Income Per Capita by Year
+### the line graph of personal income per capita by year ###
+plot_data3 <-
+  cleaned_personal_income  |>
+  filter(year %in% 1976:1989)
+
+# Create a line plot with custom styles
+plot3 <- ggplot(plot_data3, aes(x = year, y = `Per capita personal income (dollars) 2/`)) +
+  geom_line(color = "forestgreen", size = 1) +  # Set line color and size
+  labs(x = "Year", y = "Income Per Capita", 
+       title = "Personal Income Per Capita by Year") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the plot title
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels (optional)
+  )
+
+# Display the plot
+print(plot3)
+```
+@fig-personal-income-per-capita-by-year shows the progression of personal income per capita from 1976 to 1989. The y-axis indicates income per capita in dollars, which rose from approximately \$10,000 in 1976 to about \$15,000 in 1989. The x-axis lists the years in sequence.
+
+The graph reveals a steady increase in personal income per capita across the 14 years, without notable volatility. This suggests an absence of major economic downturns and might reflect a combination of real growth and inflationary trends. 
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-change-of-employment-type
+#| fig-cap: Change of Employment Type by Year
+plot_data4 <- cleaned_bussiness_pattern1 |>
+  pivot_longer(
+    cols = -year,
+    names_to = "EmploymentType",
+    values_to = "Count"
+  ) |>
+  filter(year %in% 1976:1989)
+
+# Create a line plot
+plot4 <- ggplot(plot_data4, aes(x = year, y = Count, color = EmploymentType)) +
+  geom_line() +
+  labs(
+    title = "Change of Employment Type by Year",
+    x = "Year",
+    y = "Count",
+    color = "Employment Type"
+  ) + theme_minimal()
+
+# Display the plot
+print(plot4)
+```
+@fig-change-of-employment-type shows the employment trends by type from 1976 to 1989. The y-axis counts the number of employed individuals, and the x-axis tracks the years. Wage and salary employment rose from approximately 50 million to 80 million positions, the most significant growth among the categories. Proprietors' employment increased from around 6 million to 9 million, indicating a growth in self-employed and business ownership, although at a slower rate. Total employment, combining full-time and part-time jobs, increased from about 55 million to nearly 90 million. The graph provides a straightforward depiction of employment growth across these categories over the 14 years.
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-change-of-business-type
+#| fig-cap: Change of Bussiness Type by Year
+plot_data5 <- cleaned_bussiness_pattern2 |>
+  pivot_longer(
+    cols = -year,
+    names_to = "EmploymentType",
+    values_to = "Count"
+  ) |>
+  filter(year %in% 1976:1989)
+
+# Create a line plot
+plot5 <- ggplot(plot_data5, aes(x = year, y = Count, color = EmploymentType)) +
+  geom_line() +
+  labs(
+    title = "Change of Bussiness Type by Year",
+    x = "Year",
+    y = "Count",
+    color = "Employment Type"
+  ) + theme_minimal()
+
+# Display the plot
+print(plot5)
+```
+@fig-change-of-business-type illustrates the change in business counts by sector from 1976 to 1989. The sectors displayed include agriculture, construction, finance, manufacturing, mining, private nonfarm, retail trade, services, transportation and public utilities, and wholesale trade. The y-axis quantifies the number of businesses, and the x-axis represents the years in question.
+
+From the graph, the services sector shows the most substantial increase, with business counts rising from approximately 30 million in 1976 to over 80 million by 1989. Agriculture and manufacturing also experienced growth, but to a lesser extent, with agriculture increasing from about 2 million to just under 3 million, and manufacturing from around 15 million to nearly 20 million over the same period. Other sectors such as mining, construction, and wholesale trade remained relatively unchanged, indicating stagnant growth in the number of businesses within these industries.
+
+# Discussion
+
+## How Recession Impacts on Unemployment
+The recession of the early 1980s, spanning from 1980 to 1982, presents a significant case study for analyzing the impact of economic downturns on unemployment rates across different regions (see @fig-avaerage-unemployment-rate-for-four-major-states and @fig-change-of-unemployment-for-four-major-states). The observed data from California, Florida, New York, and Texas during this period indicates a clear increase in unemployment rates, emphasizing the immediate effect of recessions on job markets. The subsequent variation in the recovery patterns of these states highlights the influence of regional economic structures and policies on unemployment trends.
+
+Increased unemployment rates during the recession reflect the direct correlation between economic contractions and job losses. This relationship leads to the importance of the vulnerability of the labor market to broader economic downturns. However, the recovery phase, as indicated by the decline in unemployment rates by 1989 in three of the states, points to the gradual restoration of economic stability and the return of job growth. This recovery process, though uneven across the states, suggests that economic policies and structural factors play crucial roles in mitigating the impact of recessions.
+
+Texas presents a distinct case with its slight decrease in unemployment during the recession, followed by an increase by 1989. This pattern suggests that Texas' economy, possibly due to its unique industrial composition, including a significant energy sector, responded differently to the economic downturn compared to the other states. This highlights the importance of considering sector-specific dynamics when analyzing economic resilience and recovery.
+
+The disparity in unemployment trends across these states post-recession emphasizes the need for state-specific economic and labor policies. The data suggests that uniform national policies may not be as effective in addressing the unique challenges and opportunities within individual states. Tailoring policies to the specific economic context of each state could enhance their efficacy in promoting economic recovery and reducing unemployment.
+
+In conclusion, the analysis of unemployment trends during and after the 1980-1982 recession in the four major U.S. states illustrates the complex relationship between economic downturns and employment. It highlights the importance of adaptive and region-specific policies in fostering economic resilience and recovery. These findings offer valuable insights for policymakers aiming to mitigate the impact of future recessions on employment.
+
+## How Recession Impacts on Personal Income
+The simultaneous occurrence of high unemployment rates during and following a recession with an increase in personal income per capita, as observed in the period from 1976 to 1989, can be interpreted in several aspects, each offering insight into the dynamics of economic indicators and their impact on the broader economy (see @fig-personal-income-per-capita-by-year).
+
+The increase in personal income per capita despite high unemployment rates could reflect the nature of economic recovery and the sectors driving it. Economic growth post-recession might be concentrated in high-wage industries, thereby increasing average income levels even as broader unemployment remains high. This scenario often indicates a structural shift in the economy where job growth in well-paying sectors does not fully compensate for job losses in others, leading to a disparity between overall income growth and employment rates.
+
+Also, the rise in personal income per capita during periods of high unemployment may be attributed to inflationary pressures. Inflation can cause nominal incomes to rise across the board, which would be reflected in higher per capita income figures. However, this increase does not necessarily translate to improved purchasing power or economic well-being for individuals, especially if wage gains do not outpace inflation.
+
+Moreover, policy interventions during and after recessions, such as fiscal stimulus measures, tax cuts, or enhanced unemployment benefits, can support and even boost personal income levels temporarily. These measures can inject liquidity into the economy, sustaining consumer spending and potentially leading to wage increases in certain sectors. As a result, average personal incomes may rise, despite the broader context of high unemployment.
+
+The indicator of personal income per capita itself offers a broad view that may mask underlying inequalities. If income gains are disproportionately concentrated among the highest earners, the average income per capita can increase even as a significant portion of the population faces unemployment or wage stagnation. This scenario highlights the importance of considering income distribution alongside average income trends to fully understand economic health and disparities.
+
+Advancements in technology and productivity improvements in certain sectors can lead to higher outputs and earnings without a corresponding increase in employment. Such productivity gains can contribute to rising personal incomes as businesses generate more wealth with fewer employees, a trend that could exacerbate during recovery phases post-recession.
+
+The observed increase in personal income per capita during a period marked by high unemployment rates underlines the complexity of economic indicators and their interrelations. 
+
+## How Recession Changes the Business Patterns
+The analysis of business patterns from 1976 to 1989, as depicted in the provided data visualizations, offers insightful perspectives on how economic cycles, such as recessions, can influence employment and business dynamics. This discussion extrapolates from the observed trends to understand the broader implications of such economic shifts on employment types and business sectors.
+
+- Impact on Employment Types: The data indicating an overall increase in proprietors, total full-time and part-time, and wage and salary employment suggests a resilient expansion of the job market despite potential economic downturns within this period. The pronounced growth in wage and salary employment underscores the increasing demand for labor in existing and emerging industries, possibly reflecting industrial advancements or shifts in economic focus. The moderate rise in proprietors points towards an entrepreneurial response to economic conditions, where individuals may seek self-employment or start businesses as alternative employment routes during times of recession (see @fig-change-of-employment-type).
+
+The interplay between different types of employment during recessions can highlight adaptive strategies within the workforce. For instance, the growth in self-employment or proprietorships might be interpreted as a move towards more flexible, possibly recession-resistant, forms of work. Conversely, the significant rise in wage and salary jobs suggests that larger businesses or sectors were expanding, potentially driven by innovation, diversification, or increased consumer demand in certain areas.
+
+- Sector-Specific Changes: The differentiation in growth rates among sectors such as agriculture, services, and manufacturing versus the stagnation in mining, construction, and wholesale trade reveals how recessions can pivot economic emphasis towards more resilient or essential industries. The substantial growth in the services sector points to a transition towards a service-oriented economy, possibly fueled by technological advancements, changes in consumer behavior, or globalization effects. This shift not only impacts the types of businesses that flourish but also influences employment patterns, favoring jobs in growing sectors over those in stagnant or declining ones (see @fig-change-of-business-type).
+
+The contrast in sector performance also suggests that economic downturns prompt a reevaluation of business models, pushing companies to innovate, adapt, or perish. Sectors showing little growth might face challenges such as decreased demand, regulatory hurdles, or inability to compete with emerging technologies or business models. In contrast, growing sectors likely capitalize on new opportunities presented by changing economic landscapes, such as increased demand for technology-driven services or shifts in consumer preferences.
+
+Understanding these patterns is crucial for businesses aiming to navigate through recessions successfully. It underscores the importance of flexibility, innovation, and strategic planning in response to economic challenges. Companies in sectors experiencing growth must focus on scaling operations efficiently and investing in innovation to sustain momentum. Meanwhile, businesses in stagnant sectors need to explore diversification, technological integration, or shifts in business models to revive growth and remain competitive.
+
+The analysis of employment and business patterns from 1976 to 1989 reveals the nuanced impacts of economic cycles on various sectors and employment types. It highlights the resilience and adaptability of the job market and the economy at large, emphasizing the role of innovation and strategic planning in overcoming recession-induced challenges. Understanding these dynamics is essential for policymakers, businesses, and individuals aiming to make informed decisions in the face of economic uncertainty.
+
+## Limitations and Next Steps
+Due to limitations in accessing relevant datasets, this paper will not explore the diverse social impacts of recessions, specifically on birth rates and education, which were initially of primary interest. Drawing from Stuart's foundational research, we quantitatively assess the prolonged impacts of the 1980–1982 recession on individuals who were in their formative years—children, adolescents, and young adults—at the onset of this economic downturn. Stuart's findings reveal significant long-term detriments to educational attainment and income levels. Specifically, for individuals aged 0–10 in 1979, a 10 percent reduction in per capita earnings from 1979 to 1982 within their birth county correlates with a 4.7 percentage point (14.6 percent) reduction in the attainment of four-year college degrees, a decrease in earned income by $2,100 (5.2 percent), and a 1.6 percentage point (13.0 percent) increase in the likelihood of living in poverty during 2000–2013. The adverse effects on college graduation rates are notably pronounced and consistently significant for individuals aged 0–13 in 1979 and diminish to small and statistically non-significant levels for those aged 14–22. This pattern indicates that the recession's impact likely stems from a reduction in childhood human capital or a sustained decrease in parental financial capacity to support higher education. Future research will address the effects on education and birth rates once relevant and accessible datasets become available.
+
+\newpage
+
+# References
