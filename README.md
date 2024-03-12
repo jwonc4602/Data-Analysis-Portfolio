@@ -13,7 +13,7 @@ This project examines the long-term impacts of the 1980–1982 recession in the 
 
 This paper explores the challenge of missing data in exploratory data analysis, categorizing it into three types: Missing Completely At Random (MCAR), Missing at Random (MAR), and Missing Not At Random (MNAR), based on the framework by Gelman, Hill, and Vehtari (2020). It examines strategies for managing missing data, such as dropping observations, imputation, and multiple imputation, emphasizing the importance of selecting an approach that suits the nature of the missingness. The paper also addresses the ethical considerations in handling missing data, advocating for transparency and the minimization of bias to ensure the integrity and reliability of analytical results. You can find more details [here](https://github.com/jwonc4602/Discussion-about-Missing-Data)
 
-## 1) HP filters practice
+## 4) HP filters practice
 Implemented the HP filter(Hodrick–Prescott filter) decomposition of quarterly RGDP data {Q1 1983 – Q4 2022} in the U.S from [FRED website](http://research.stlouisfed.org/fred2/).
 
 Real GDP and HP Trend
