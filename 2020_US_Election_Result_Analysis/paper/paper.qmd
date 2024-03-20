@@ -1,0 +1,567 @@
+---
+title: "A Detailed Demographic Analysis of 2020 U.S. Presidential Election Through Multilevel Regression and Post-Stratification"
+subtitle: "The Impact of Gender, Education, and Geographic Location on Voter Preferences"
+author: 
+  - Jeongwoo Kim
+  - Jiwon Choi
+thanks: "Code and data are available at: https://github.com/Kjeongwoo99/2020_US_Election_Result_Analysis"
+date: today
+date-format: long
+abstract: "In this study, we analyzed the 2020 U.S. Presidential Election outcomes using multilevel regression with post-stratification (MRP), applied to a large-scale national survey dataset and census data. Our findings reveal how demographic factors such as gender, education, and geographic location influence voting behavior, with particular emphasis on voter preferences for Donald Trump. The analysis highlights significant variations in voter support across gender, states and educational backgrounds and how they shape electoral outcomes. This research contributes to our understanding of the American electoral landscape, demonstrating the critical role of demographic diversity in determining the direction of political preferences and election results."
+format: pdf
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(palmerpenguins)
+library(here)
+library(kableExtra)
+library(broom.mixed)
+library(knitr)
+library(rstanarm)
+
+#### Read in necessary data and model ####
+cleaned_data_post_strat <-read_csv(file = here("data/analysis_data/usa_00002_cleaned.csv"), show_col_types = FALSE)
+cleaned_data_survey <- read_csv(file = here("data/analysis_data/ns20191003_cleaned.csv"), show_col_types = FALSE)
+survey_model <- readRDS(file = here("models/consider_trump.rds"))
+prediction_model <- readRDS(file = here("models/census_data_with_predictions.rds"))
+```
+
+# Introduction
+
+The U.S. Presidential Election is a significant political issue given its impacts on social, economic and cultural dimensions across the world. The 2020 Election was unique in that it was held during COVID-19, characterized by unprecedented voter turnout and a divided political gap between the Republicans and the Democrats. Joe Biden was elected as the President of the United States after 4 years of the former President Donald Trump era. Our research uses statistical methodologies to analyze how demographic factors such as education, state, and gender influence voter behavior and result in the victory of the Democratic party. By utilizing multilevel regression with post-stratification (MRP) to large-scale national survey data and census information, we explain the roles of gender, education, and geographic location in shaping voter preferences, focusing on support for Donald Trump.
+
+Understanding the electoral outcomes is crucial, not only for politicians but for the broader public and policymakers aiming to grasp the evolving landscape of American politics. Traditional analyses often fall short of capturing the relationships between voter demographics and electoral preferences. There are growing gaps between the groups in each education, gender, and state level and this study responds to this need by employing MRP. This technique allows accurate inferences about the voting behavior of diverse population segments. The estimand of our research is the true effect of demographic factors— gender, education, and geographic location—on voter preferences for Donald Trump in the 2020 U.S. Presidential Election. This effect represents the real-world influence that the demographic variables affect the likelihood of an individual voting for Donald Trump with all other variables held constant. It shows the estimated shift in voter preference towards Donald Trump to one unit change in each demographic factor. We aim to estimate this true effect as accurately as possible using available data. 
+
+Our findings reveal significant variations in voter support across different states and educational backgrounds and gender. The analysis points to a divergent pattern in voting behavior among different educational groups, challenging stereotypical narratives about educational attainment and party allegiance. We find that there is an increase in support for the Republicans from the voters with high education levels in this election. We also find the gender gap between men and women where men are more supportive of Trump while women tend to favor Biden. Lastly, we discover the strong preference for Biden from large cities in the West and the East Coast while Trump's supporters are concentrated in the mid-west and suburban cities. 
+
+The importance of our study extends beyond academic, offering valuable insights for political strategists, journalists, and citizens. By providing a clearer picture of the demographic factors that influenced the 2020 election, our research aids in the development of more informed political strategies and fosters a deeper understanding of American democracy.
+
+The paper begins by introducing the broader context and motivation behind our study. @sec-data then discusses specifics of the data sources and the variables that we considered important. @sec-model introduces the specifics of the logistic regression model with post-stratification methods. This is followed by the presentation of the data in @sec-results and discussions of our findings regarding education, gender, and state in voter preference in @sec-discussion. 
+
+# Data {#sec-data}
+
+We have used two datasets for this study. One is the U.S. election survey data of Democracy Fund + UCLA Nationscape dataset from the Voter Study Group [@citeSurveyData], conducted on October 3, 2019. Second is the census data from IPUMS America Census Service [@citeIPUMS], which is used as the post-stratification data for the survey data to adjust the weight. Data was collected and analyzed using R statistical programming software [@citeR], with additional packages like tidyverse [@tidyverse], rstanarm [@rstanarm] knitr [@citeKnitr], here [@here], and many others for support.
+
+## Survey Data
+
+This survey data is an 18-month election study conducted by UCLA researchers with roughly 6250 online interviews each from July 2019 to February 2021 [@citeSurveyData]. The sample is weighted to represent the U.S. adult population [@citeSurveyData]. Nationscape groups weight on the following important factors: gender, the four major census regions, race, Hispanic ethnicity, household income, education, age, language spoken at home, nativity, 2016 presidential vote, and the urban-rural mix of the respondent's ZIP code [@citeSurveyData]. According to the data, males make up 48.3% while females make up 51.3% [@citeSurveyData]. 74.2% of the respondents are White, 6.8% are Asian/Pacific, and 12% are Black [@citeSurveyData]. 20.4% are those between 18-29, 33.4% are 30-49, 32.4% are 50-69, and 3.3% are 70+ [@citeSurveyData]. On average, 5.1% declined immediately among those who were selected for the survey. 16.7% of the respondents did not complete the survey. Another 5.9% were categorized as speeding or straight-line which means they completed the survey in less than 6 minutes or selected the same response for every question in the three policy question batteries [@citeSurveyData]. Leaving these out leave 72.4% of the original sample for the analysis.
+
+The Nationscape survey's strength lies in its methodological rigor - the effectiveness of collecting large samples from U.S. citizens and its weighting strategy designed to mirror the U.S. adult population by including weight factors such as age, gender, race, and more. As they filter out inaccurate or missing data, it makes sure that the data collected are accurate and ensures data integrity. While other datasets such as the General Social Survey (GSS) and the American National Election Studies (ANES) are available, the Nationscape dataset's frequency (surveys collected every week) gives it an advantage in analyzing electoral trends and shifts in real-time. Its' extensive sample size also justifies the choice of this dataset.
+
+For our analysis, we decided to choose five demographics: age, gender, education, race, and state and focus on gender, education and state. Age is important because in general, voters tend to become more conservative as they get older. To account for the age difference, we divided the age group into four categories: 18-29, 30-49, 50-69 and 70+.
+
+Gender is also an important category because in general, men tend to be more conservative and women tend to be more liberal. Recently, gender issues are growing social issues and this may affect the election, hence we wanted to explore how this affects our model.
+
+Education is also an interesting factor. In the past, non-college white voters used to support Democrats while college-educated white voters supported Republicans [@Harris]. However, there has been a switch in this trend as 61% of non-college white voters showed their support whereas just 45% of college-educated white voters did in the exit polls [@Harris].
+
+Race also needs some attention because normally non-white groups are highly in favour of Democrats regardless of candidates and white swing by depending on candidates. According to the statistics collected in 2016, 93% of black, 71% of Latino, 68% of Asian support democrats while only 41% of white support democrats [@Prokop]. As white voters make up 74% of the voting population, it is really important for both parties to attain this demographic group.
+
+Lastly, states are very important as some states historically favor conservatives while some states vote for democrats. In general, the west and the east coasts are democrat supporters whereas south are conservative supporters.
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-distribution-by-age-group
+#| fig-cap: Distribution of Sample and Population by Age Group
+
+# Read in the survey data
+survey_data <- cleaned_data_survey
+
+# Read in the post-stratification data
+post_strat_data <- cleaned_data_post_strat
+
+# Count the number of occurrences in each age group and calculate percentages for the survey data
+survey_counts <- survey_data %>%
+  group_by(age_group) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+
+# Count the number of occurrences in each age group and calculate percentages for the post-strat data
+post_strat_counts <- post_strat_data %>%
+  group_by(age_group) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+
+# Combine the percentages into a single data frame for plotting
+combined_percentages <- rbind(
+  data.frame(dataset = 'Survey', age_group = survey_counts$age_group, percentage = survey_counts$percentage),
+  data.frame(dataset = 'Post-Strat', age_group = post_strat_counts$age_group, percentage = post_strat_counts$percentage)
+)
+
+# Plot the percentages with specified bar width and percentage on y-axis, and label each bar
+ggplot(combined_percentages, aes(x = age_group, y = percentage, fill = dataset)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)),
+            position = position_dodge(width = 0.8), 
+            vjust = -0.3, # Adjust text position
+            color = "black",
+            size = 3) + 
+  labs(x = "Age Group", y = "Proportion", title = "Distribution of Sample and Population by Age Group") +
+  theme_minimal() +
+  scale_fill_manual(values = c("orange", "green"))
+```
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-distribution-by-gender
+#| fig-cap: Distribution of Sample and Population by Gender
+
+# Read in the survey data
+survey_data <- cleaned_data_survey
+
+# Read in the post-stratification data
+post_strat_data <- cleaned_data_post_strat
+
+# Calculate percentages for the survey data by gender
+survey_gender <- survey_data %>%
+  group_by(gender) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+
+# Calculate percentages for the post-strat data by gender
+post_strat_gender <- post_strat_data %>%
+  group_by(gender) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+
+# Combine the gender percentages into a single data frame for plotting
+combined_gender_percentages <- rbind(
+  data.frame(dataset = 'Survey', gender = survey_gender$gender, percentage = survey_gender$percentage),
+  data.frame(dataset = 'Post-Strat', gender = post_strat_gender$gender, percentage = post_strat_gender$percentage)
+)
+
+# Plot the gender percentages with specified bar width and percentage on y-axis, and label each bar
+ggplot(combined_gender_percentages, aes(x = gender, y = percentage, fill = dataset)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)),
+            position = position_dodge(width = 0.8), 
+            vjust = -0.3, # Adjust text position
+            color = "black",
+            size = 3) + 
+  labs(x = "Gender", y = "Proportion", title = "Distribution of Sample and Population by Gender") +
+  theme_minimal() +
+  scale_fill_manual(values = c("orange", "green"))
+```
+
+```{r fig.width=8.5, fig.height=5}
+#| message: false
+#| echo: false
+#| warning: false
+#| label: fig-data-distribution-by-state
+#| fig-cap: Distribution of Sample and Population by State
+# Read in the survey data
+survey_data <- cleaned_data_survey
+
+# Read in the post-stratification data
+post_strat_data <- cleaned_data_post_strat
+
+state_survey <- survey_data %>% 
+  group_by(state) %>% 
+  summarise(n = n()) %>% 
+  mutate(pct = n/sum(n), type = "Survey",
+         group = "state")
+
+state_post_strat <- post_strat_data %>% 
+  group_by(state) %>% 
+  summarise(n = n()) %>% 
+  mutate(pct = n/sum(n), type = "Post-Strat",
+         group = "state")
+
+variables <- rbind(state_survey, state_post_strat)
+
+# plot our results, grouped by variable with each line representing
+# the proportions for the polling and post-strat data
+
+variables %>% ggplot(aes(as.factor(state), pct, group=as.factor(type), linetype = as.factor(type))) + 
+  geom_line() + 
+  facet_wrap(~group, ncol = 1, scales = "free_x") + 
+  theme(axis.text.x = element_text(angle=90, hjust = 1, vjust = 0.5)) + # Corrected theme function
+  labs(x = "State", y = "Proportion", linetype = "Data Set",
+       title = "Distribution of Sample and Population by State") +
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-distribution-by-race
+#| fig-cap: Distribution of Sample and Population by Race Ethnicity
+# Read in the survey data
+survey_data <- cleaned_data_survey
+# Read in the post-stratification data
+post_strat_data <- cleaned_data_post_strat
+# Calculate percentages for the survey data by race
+survey_race <- survey_data %>%
+  group_by(race) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+# Calculate percentages for the post-strat data by race
+post_strat_race <- post_strat_data %>%
+  group_by(race) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+# Combine the race percentages into a single data frame for plotting
+combined_race_percentages <- rbind(
+  data.frame(dataset = 'Survey', race = survey_race$race, percentage = survey_race$percentage),
+  data.frame(dataset = 'Post-Strat', race = post_strat_race$race, percentage = post_strat_race$percentage)
+)
+# Adjust the factor levels for the 'race' column to specify the order
+combined_race_percentages$race <- factor(combined_race_percentages$race, 
+                                                    levels = c("White", "Black", "Asian", "American Indian", "Other"))
+# Plot the race percentages with specified bar width and percentage on y-axis, and label each bar
+ggplot(combined_race_percentages, aes(x = race, y = percentage, fill = dataset)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)),
+            position = position_dodge(width = 0.8), 
+            vjust = -0.3, # Adjust text position
+            color = "black",
+            size = 3) + 
+  labs(x = "Race", y = "Proportion", title = "Distribution of Sample and Population by Race Ethnicity") +
+  theme_minimal() +
+  scale_fill_manual(values = c("orange", "green"))
+```
+## Post-stratification Data
+
+IPUMS ("Integrated Public Use Microdata Series") is a website that offers a database of samples of the American population from the American Community Surveys of 2000-present. These samples provide rich qualitative information on the long-term changes in the population. We selected the '2019 ACS' data [@citeIPUMS] as the post-stratification dataset for our research to avoid any potential effects of COVID-19. The ACS is an ongoing survey that collects data monthly, which is then combined into 1-year, 3-year, and 5-year aggregates. It then uses stratified sampling where the U.S population is broken down into sub-groups and initial weights are assigned to each respondent. 
+
+One strength of the IPUMS survey is the fact that it provides a data with detailed demographic of the U.S. population with social, economic and housing characteristics, which is very useful in our analysis of the 2020 U.S presidential election forecast. The longitudinal data of this survey also allows researchers to analyze trends over time. The U.S. Census Bureau offers credibility of the data with high quality checks. The post-stratification process ensures correcting for sampling biases and non-response. On the other hand, since the survey relies on self-report, there lies a risk of response bias inherently. While it is an ongoing survey, there is still a time lag between the data collection and data availability. However, the large sample size, consistency and reliability of the data collection, the integrated data over time with post-stratification can justify the decision to utilize IPUMS data over other sources. 
+
+In processing the raw post-stratification dataset, which initially contained approximately 3.2 million records, we refined it down to about 2.3 million records. This was achieved through a meticulous selection process, ensuring the data's integrity and relevance for our analysis. In our analysis, we've selected the variables 'sex', 'race', 'stateicp', 'age', and 'educd' from the dataset. To simplify our analysis, respondents who indicated 'other' or provided no data for their sex have been excluded. Consequently, 'sex' has been categorized strictly as 'Male' and 'Female'. We've refined 'race' into five categories: 'White', 'Black', 'Asian', 'American Indian', and 'Other', based on the composition of the U.S. population, with White, Black, and Asian categories accounting for approximately 93 percent of the total.
+
+The 'stateicp' variable encompasses all U.S. states, using their standard abbreviations (e.g., 'CT' for Connecticut), and extends to 55 values to include 'Puerto Rico', 'State groupings (1980 Urban/rural sample)', 'Military/Military Reservations', 'District of Columbia', and an 'State not identified' category. Age has been grouped into four categories: '18-29', '30-49', '50-64', and '70+'. For educational attainment ('educd'), we've created four categories: 'High school or less', 'Some college', 'College degree', and 'Postgrad'.
+ 
+We excluded any unknown responses to ensure clarity and accuracy in categorization and to enhance clarity and align with survey data, we've renamed 'sex', 'stateicp', 'age', and 'educd' to 'gender', 'state', 'age_group', and 'education', respectively. This restructuring aims to streamline our analysis by ensuring each respondent is accurately categorized.
+
+All figures showed in the data section illustrate comparisons between survey data and post-stratification data across different variables. First, the data comparison by state shows that the correspondence between the survey and post-stratification data for each state is quite accurate, further emphasizing the overall reliability of the survey methodology in capturing diverse demographic characteristics. (see @fig-data-distribution-by-state) In other four figures, orange bars represent post-stratification data, while green bars signify survey data. The percentages displayed on each figure are rounded to the nearest tenth, introducing a potential margin of error of ±0.1% in the total values. Generally, the survey data aligns closely with the post-stratification data, maintaining a discrepancy of about 10% across most categories. Notable exceptions are observed in the '30-49' age group and the 'Some college' education level, where the differences exceed this margin. (see @fig-distribution-by-age-group, @fig-distribution-by-gender, @fig-distribution-by-race, and @fig-distribution-by-education)
+
+```{r fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-distribution-by-education
+#| fig-cap: Distribution of Sample and Population by Education
+# Read in the survey data
+survey_data <- cleaned_data_survey
+# Read in the post-stratification data
+post_strat_data <- cleaned_data_post_strat
+# Calculate percentages for the survey data by education
+survey_education <- survey_data %>%
+  group_by(education) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+# Calculate percentages for the post-strat data by education
+post_strat_education <- post_strat_data %>%
+  group_by(education) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)  # Calculate percentage
+# Combine the education percentages into a single data frame for plotting
+combined_education_percentages <- rbind(
+  data.frame(dataset = 'Survey', education = survey_education$education, percentage = survey_education$percentage),
+  data.frame(dataset = 'Post-Strat', education = post_strat_education$education, percentage = post_strat_education$percentage)
+)
+# Adjust the factor levels for the 'education' column to specify the order
+combined_education_percentages$education <- factor(combined_education_percentages$education, 
+                                                    levels = c("High school or less", "Some college", "College degree", "Postgrad"))
+# Plot the education percentages with the adjusted order
+ggplot(combined_education_percentages, aes(x = education, y = percentage, fill = dataset)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)),
+            position = position_dodge(width = 0.8), 
+            vjust = -0.3, # Adjust text position
+            color = "black",
+            size = 3) + 
+  labs(x = "Education", y = "Proportion", title = "Distribution of Sample and Population by Education") +
+  theme_minimal() +
+  scale_fill_manual(values = c("orange", "green"))
+```
+
+@tbl-voters-intention-to-vote-for-trump shows the proportion of voters who intend to vote for Donald Trump or not. More than half of the respondents, which is 55.30% choose not to vote for Donald Trump. Also, @tbl-voters-intention-of-their-primary-party shows the proportion of voters' supporting each party. The data used to create these table is from the Democracy Fund + UCLA Nationscape [@citeSurveyData]. We see that Donald Trump and his party Republican are not expected to win the popular vote before we implement the model.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-voters-intention-to-vote-for-trump
+#| tbl-cap: Voters Intention to Support Trump
+data <- cleaned_data_survey
+
+# Prepare the data with specified order
+trump_counts <- data %>%
+  mutate(consider_trump = factor(consider_trump, levels = c("Yes", "No", "Other"))) %>%
+  count(consider_trump, name = "Number of Respondents") %>%
+  mutate(`Proportion (%)` = (`Number of Respondents` / sum(`Number of Respondents`)) * 100) %>%
+  mutate(`Proportion (%)` = round(`Proportion (%)`, 2)) %>%
+  rename(`Response` = consider_trump)
+
+# Use kable to create the table
+kable(trump_counts, format = "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-voters-intention-of-their-primary-party
+#| tbl-cap: Voters Intention of Their Primary Party
+
+data <- cleaned_data_survey
+
+# Prepare the data with specified order
+party_preference_counts <- data %>%
+  mutate(primary_party = factor(primary_party, levels = c("Democratic", "Republican", "Other"))) %>%
+  count(primary_party, name = "Number of Respondents") %>%
+  mutate(`Proportion (%)` = (`Number of Respondents` / sum(`Number of Respondents`)) * 100) %>%
+  mutate(`Proportion (%)` = round(`Proportion (%)`, 2)) %>%
+  rename(`Party Preference` = primary_party)
+
+# Use kable to create the table
+kable(party_preference_counts, format = "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+
+# Model {#sec-model}
+For our study, we employ a technique called multilevel regression with post-stratification (MRP). This approach involves creating a model based on a smaller data set, such as our survey data, and then extending the model's findings to a larger population.
+
+The key steps in MRP involve initially selecting a dataset for model development. In this case, we utilized survey data from the Voter Study Group [@citeSurveyData]. The next step is to construct a model with this smaller dataset; here, we employed a logistic regression based on the survey data, formulated as seen in equation \ref{eq:logit}. This step is then followed by the application of post-stratification to a broader dataset, aiming to estimate population characteristics. For our analysis, Census data from IPUMS [@citeIPUMS] served as this larger dataset. Given that logistic regression is suited for binary outcomes, we've introduced a variable, 'consider_trump', which assigns a 1 if the respondent indicates a willingness to vote for Donald Trump, and a 0 for intentions to vote for other candidates, with 0 encompassing both "No" and "Other" responses.
+
+The logistic regression model takes the form of:
+
+\begin{equation}
+log(\frac{\hat{p}}{1 - \hat{p}}) = \beta_{0} + \beta_{1}x_{gender} +
+\beta_{2}x_{agegroup} + \beta_{3}x_{race} + \beta_{4}x_{state} + \beta_{5}x_{education}
+\label{eq:logit}
+\end{equation}
+
+In equation \ref{eq:logit}, each $\beta$ represents a coefficient determined through regression analysis. The variables chosen for this project are gender, age, race, education, and state. These were selected because gender, age, and race are proven to be reliable indicators of voting preferences. This decision is based on patterns such as certain states consistently favoring the Republican party, while others alternate between Democratic and Republican. Education was chosen over income because it provides a clearer picture of an individual’s background than income does.
+
+Once the logistic regression model is developed, we'll use the `predict()` function in R [@citeR] to apply our model to Census data [@citeIPUMS], breaking down the dataset into categories based on gender, race, age group, education level, and state. This will give us the likelihood of individuals within each category voting for Donald Trump. These predictions allow us to analyze potential outcomes like the popular vote winner or the electoral college vote distribution.
+
+We use the `stan_glm()` function in R [@citeR] for our regression analysis, specifically because we are dealing with a binary outcome: whether a voter supports Donald Trump or not. The nature of our data suggests an S-shaped distribution rather than a linear one, making logistic regression a better fit than linear regression. This approach is advantageous, especially when paired with post-stratification, as it allows us to better represent under-represented groups in our analysis. For instance, despite having only 7 responses from Alaska in our survey data [@citeSurveyData], through multilevel regression and post-stratification, we can adjust this to effectively represent over 4500 individuals.
+
+However, there are limitations to our model. The binary outcome does not allow for consideration of third-party candidates or non-voters, although this limitation is mitigated by our focus on the main candidates. More critically, our model's accuracy is heavily dependent on the quality of our survey data. Any inaccuracies or the need for adjustments in the survey can significantly impact our findings.
+
+# Results {#sec-results}
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-model-coefficients
+#| tbl-cap: Coefficients from the Model
+model <- survey_model 
+coefficients <- broom.mixed::tidy(model, conf.int = TRUE) 
+
+kable(coefficients, format = "latex", booktabs = TRUE, align = "c") %>%   kable_styling(latex_options = "scale_down", font_size = 7)
+```
+
+@tbl-model-coefficients shows the estimates for the coefficients that will fit into our logistic regression equation. These coefficients will fit into Equation \ref{eq:logit}, and were calculated using data from the Voter Study Group [@citeSurveyData]. The table is made using `kable` from `knitr` [@citeKnitr] and is formatted using `kableExtra` [@citekableExtra]. 
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-coefficient-estimates
+#| fig-cap: Coefficient Estimates
+
+coefficients %>%
+  ggplot(aes(estimate, term)) + geom_point() + geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) + labs(title = "Coefficient Estimates", x = "Estimate", y = "Coefficient") +   theme(axis.text.y = element_text(size = 5))
+```
+
+@fig-coefficient-estimates presents the coefficients derived from logistic regression on the survey data [@citeSurveyData]. It also includes error bars, indicating the confidence interval for each coefficient estimate. In interpreting these coefficients, it is essential to understand that positive values suggest a greater likelihood of voting for Donald Trump, whereas negative values indicate a tendency to vote for other candidates, such as Joe Biden.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: tbl-prediction-probabilities
+#| tbl-cap: Example of Prediction model
+
+# Select only the first 10 rows for the table
+probability_subset <- head(prediction_model, 10)
+
+# Create the table with kable and format with kable_styling
+kable(probability_subset, format = "latex", booktabs = TRUE, align = "c") %>%
+  kable_styling(latex_options = c("striped", "scale_down", "hold_position"), full_width = FALSE)
+```
+
+By utilizing the results from our logistic regression model, we can formulate an equation that adheres to the structure outlined in equation \ref{eq:logit}, incorporating specific $\beta$ coefficients for each variable. Given the number of variables, detailing the equation fully is challenging. Essentially, the equation integrates the $\beta$ value of a variable if an individual's characteristic matches that variable. @tbl-prediction-probabilities offers examples of how the probability varies based on different variables.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-distribution-by-state
+#| fig-cap: Distribution of Sample and Population by State
+
+survey_data$consider_trump_binary <- ifelse(survey_data$consider_trump == "Yes", 1, 0)
+  
+# group by each demographic
+post_props <- post_strat_data %>% 
+  group_by(state, race, age_group, gender, education) %>% 
+  summarise(n = n(), .groups ='drop') %>% 
+  group_by(state) %>% 
+  mutate(prop = n/sum(n))
+
+# estimate of the model 
+post_props$estimate <- predict(survey_model, newdata = post_props, type = "response")
+
+# new column with the number of voters for Trump
+post_props <- post_props %>% mutate(num_voters = n*estimate)
+
+# error terms 
+errors <- predict(survey_model, newdata = post_props, type = "response", se.fit = T)
+lower <- errors$fit - errors$se.fit
+upper <- errors$fit + errors$se.fit
+
+# combine errors with proportions
+post_props_error <- cbind(post_props, lower, upper)
+post_props_error <- post_props_error %>% rename("lower" = ...10, "upper" = ...11)
+
+# new column of voters for trump 
+post_props_error <- post_props_error %>% 
+  mutate(num_voters_lower = n*lower, num_voters_upper = n*upper)
+
+# confidence intervals for errors 
+vote_trump <- post_props_error %>% 
+  mutate(trump_prop=estimate*prop, 
+         trump_prop_lower = lower*prop,
+         trump_prop_upper = upper*prop) %>%
+  group_by(state) %>%
+  summarise(trump_predict = sum(trump_prop),
+            trump_prop_lower = sum(trump_prop_lower),
+            trump_prop_upper = sum(trump_prop_upper))
+
+# state proportions for survey data
+survey_props <- survey_data %>% 
+  group_by(state, consider_trump_binary) %>% 
+  summarise(n = n()) %>% 
+  mutate(prop = n/sum(n))
+
+# combining survey data with the post-stratification data
+combined_trump <- inner_join(survey_props, vote_trump, by = "state")
+combined_trump  <- combined_trump %>% filter(consider_trump_binary == 1)
+
+stateprops_plot <- combined_trump %>% arrange(desc(trump_predict)) %>% 
+  mutate(support = ifelse(trump_predict >= 0.5, "Yes", "No"))
+
+# define colors 
+support_colors <- c("No" = "Blue", "Yes" = "Red")
+
+# state plot
+ggplot(stateprops_plot, aes(y = reorder(state, trump_predict), 
+                            x = trump_predict, color = support)) +
+  geom_point() +
+  geom_errorbar(aes(xmin = trump_prop_lower, xmax = trump_prop_upper)) +
+  geom_vline(xintercept = 0.5, linetype = "dashed", color = "orange") +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Estimated Proportion of State Voting for Donald Trump",
+       x = "Percentage", y= "State",
+       color = "Candidate") +
+  theme(axis.text.y = element_text(size = 5), legend.position = "right") +
+  scale_color_manual(values = c("Blue", "Red"))
+```
+
+@fig-distribution-by-state shows us the estimated of proportion of support for Trump or not by state using MRP with the inclusion of error terms. Each dot represents the point estimate of the proportion of support for Trump (red) or support for any other candidates including Joe Biden (blue) in each state. Horizontal lines extending from the dots represent error bars for these estimates. The length of each line indicates the uncertainty associated with each estimate. For instance, we can see that this uncertainty lies between 55% to slightly higher than 80% for Trump in MT (Massachusetts). The dashed orange line in the middle at the 50% mark represents the threshold for majority support. On the y-axis, each state is listed with its abbreviations and is ordered based on the proportion of support for Trump from the highest to the lowest.
+
+From @fig-distribution-by-state, it seems that the majority of the states do not support Trump. Only 7 states out of 51 have a point estimate greater than 50% for Trump. The horizontal lines of confidence intervals of some states overlapping the green mark give some hope for the Republicans. Excluding these contesting states, however, our model suggests that only 3 states are definitely in favor of Trump whereas 35 states are not considering supporting for Trump.
+
+```{r} 
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-distribution-by-educationlevel
+#| fig-cap: How different education levels of voters affect voting for Trump
+
+# group by education level
+post_props_education <- post_strat_data %>% 
+  group_by(education, race, age_group, gender, state) %>%  
+  summarise(n = n(), .groups ='drop') %>%
+  group_by(education) %>%
+  mutate(prop = n/sum(n))
+
+# predictions based on education
+post_props_education$estimate <- predict(survey_model, newdata = post_props_education, type = "response")
+
+# number of voters for Trump
+post_props_education <- post_props_education %>% mutate(num_voters = n * estimate)
+
+# errors for the prediction
+errors_education <- predict(survey_model, newdata = post_props_education,
+                                type = "response", se.fit = TRUE)
+lower_education <- errors_education$fit - errors_education$se.fit
+upper_education <- errors_education$fit + errors_education$se.fit
+
+# combine the proportions and the errors
+post_props_education_error <- cbind(post_props_education, lower_education, upper_education) %>% 
+  rename(lower = ...10, upper = ...11)
+
+# predictions by education level
+vote_trump_education <- post_props_education_error %>%
+  mutate(trump_prop = estimate * prop,
+         trump_prop_lower = lower * prop,
+         trump_prop_upper = upper * prop) %>%
+  group_by(education) %>%
+  summarise(trump_predict = sum(trump_prop),
+            trump_prop_lower = sum(trump_prop_lower),
+            trump_prop_upper = sum(trump_prop_upper))
+
+# education plot
+  ggplot(vote_trump_education, aes(y = reorder(education, trump_predict), 
+                                 x = trump_predict)) +
+  geom_point(stat = "identity") +
+  geom_errorbar(aes(xmin = trump_prop_lower, xmax = trump_prop_upper, width = 0.2)) +
+  geom_vline(xintercept = 0.5, linetype = "dashed", color = "green") +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Estimated Proportion of Voters for Trump by Education",
+       x = "Percentage", y= "Education") + 
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 12),
+        plot.title = element_text(hjust = 2)) # Move title to the right
+```
+
+@fig-distribution-by-educationlevel presents the estimated proportion of voters for Trump by education level, divided into four categories: 'High school or less', 'Some college', 'College degree', and 'Postgrad'. Each black dot represents the point estimate of the proportion of voters within the corresponding education category who are predicted to vote for Trump. The horizontal lines extending to the left and right of each dot represent the error terms around the estimate, which reflect the uncertainty. 
+
+It shows that regardless of education level, the level of support for Trump lies below 40% The Republican party does not have the majority, including the error bars across all education levels. Voters with a "High school or less" education level appear to have the lowest estimated support for Trump, which does not align with various exit polls and analyses from the 2020 election suggesting that Trump had substantial support among voters without a college degree. Conversely, Voters with 'Some college' and 'Postgrad' education are the two groups that are more in support of Trump, which is exactly the opposite of what we expected.
+
+# Discussion {#sec-discussion}
+
+## Analyzing Voter Preferences Across Education
+
+The analysis reveals critical insights into how education influence voting behavior. Contrary to conventional wisdom and past electoral analyses, our findings indicate a divergent pattern in voting behavior among different educational groups. The shift in party allegiance among non-college voters from Republicans to Democrats and the dominance of popularity of the Republicans with 'Some college' and 'Postgrad' education levels challenge the stereotypical narratives that educational attainment leads to an increase in support for the Democrats. This group, especially the highly educated 'Postgrad' group being the second highest supporters suggests a reevaluation of Democrats' strategies to appeal to educated voters concerned with economic policies and national security. However, according to our analysis, the Republicans failed to attract voters as the highest proportion of support among the four educational groups remains under 40%. This almost certainly predicts that Joe Biden will become the president of the United States. This coincides with the election results where Biden won 55% of the votes from the college graduates while Trump gained 43% [@theWashingtonPost]. Our analysis of 37% of voters with college degrees and 37.5% of postgrad suggests this is in line with the results. However, this model has failed to estimate the winning of Trump from the less educated group since we estimated 39% from voters with 'some college degree' and 36.5% from voters with 'High school or less' whereas the post-election results show 50% for Trump from 'Some college or less' [@theWashingtonPost]. This is odd because the higher the education completed, the more likely an individual to vote for democratic party in general. One possible explanation for this is that there are some issues with the data collection where voting for Trump is underestimated as the proportion of voters for him remains under 40% across all educational groups. Another possibility is that the gap between educational groups in party preference has actually been reduced from the past. In fact, support from white men without a college degree reduced somewhat although he still won a majority of this demographic [@pewresearchcenter1]. 
+
+## Voter Preferences Across Gender
+
+@tbl-model-coefficients shows how males were more likely than females to have a favorable view of Trump, which correctly captured the tendency of voters by sex since 53% of men favored Trump whereas 42% of women favored Trump [@theWashingtonPost]. Gender does not act as a uniform lens through which policy positions are viewed, however, it is still an important issue especially regarding Trump in this election due to his words and actions that may viewed as sexist. Historically, women have been leaning more liberal than men. This gender gap has varied across different elections but has remained a consistent feature of the American political landscape since the 1980s [@mary]. While men's preferences for a smaller government remained stable, women's preference for a bigger government increased [@pewresearchcenter]. This shift contributed to a widening gap in presidential job approval with men remaining more supportive attitude of Trump. Solanas suggests that Trump's administration increased investment in health, education, and security for girls, teenagers, and migrant women, and support measures for pregnant women, as well as the promotion of women in STEM fields and efforts against gender violence [@elcano]. However, this is no secret that Trump is very conservative in treating gender equality. His openly sexist comments and behaviours presaged potential limitations on women's rights and freedoms, which may have contributed to the gender gap further [@elcano].
+
+## Geographical Divides and Electoral Preferences
+
+From @fig-distribution-by-state, we can observe that Trump leads in the mid-west of America, Montana (MT), Wyoming (WY), Mississippi (MS), Maine (ME), Missouri (MO), Kentucky (KY), and Utah (UT). Even the competing states like Louisiana (LA), New Mexico (NM), and Tennessee (TN) are also mid-west part of the country, which are rural areas with low population density. This is correctly estimated since in the real world where Trump won in these states: MT, WY, MS, MA, MI, KY, and UT. He also won in LA and TN, which we considered were competing states. We can go more in-depth into this study with the benefit of hindsight. We estimated that the biggest victory for Trump would be Montana (MT) with just below 70%. In reality, he won by 59.6%, which is lower than we thought but still sits within our error values. The next state with the highest proportion of support for Trump was Wyoming (WY) from our model with 65%, which is close to the election poll result of 69%. We were very successful with Mississippi (MS) with an estimation of 57% and the poll result of 57.5%. Maine (ME) was another very close estimate with 52% and the poll result of 53.1%. 56.8% voted for Trump in Missouri (MO), which was slightly higher than our estimation of 51%. We estimated that only 26% of voters in Hawaii (HI) would vote for Trump with error margins of ±10%, which matched 34.3% for Trump in the election. 41.9% for Trump in Colorado (CO) lie within our estimate of 37% with ±5% margins.
+
+There were some cases where our estimation was incorrect in terms of who won the state but the results lie within our error margins. For instance, we estimated Utah (UT) in favor of the Democrats with a slight margin of 51% for Biden but Biden only received 37.6% in the election. This still lies within our error values which we estimated to be from 43% to 58%. However, there were some errors in our estimation where our model failed to predict the Trump winning in the number of states in general. Our model predicted Louisiana (LA) for Biden with 51% but he only received 39.9% of the votes. This value is lower than our error margins. 62% of the residents in Alabama, a Republican stronghold in the last eleven presidential elections had voted for Trump while our model estimated 45% of votes for Trump. The Republicans won in Florida (FL) with a slight margin of 51.2% but we predicted an estimation of 45% with ±2% margins. What we estimated to be the strongest Democrat state was North Dakota (ND) with an estimation of only 23% with ±12% margins but in reality, 65.1% of the residents voted for Trump. In general, big cities and large suburban areas along the west coast and the east coast favored Biden whereas Trump supporters are mostly in the rural areas in the mid-south and mid-north states from the election results.
+
+Our model was able to capture some challenges of long-held assumptions about electoral tendency by education. Biden improved his performance among suburban voters and White non-college voters, demonstrating a broadening appeal across different demographic groups, which is what our model suggested [@pewresearchcenter1]. Trump maintained strong support among rural voters and White evangelicals, which emphasizes the importance of educational divides, with significant differences in candidate support based on education levels [@pewresearchcenter1]. In addition, while Trump's stronghold among White men without a college degree loosened somewhat, he still won a significant majority of this demographic, which is not captured in our model [@pewresearchcenter1].
+
+We were able to estimate the winning states for each candidate with some success. From the data and analysis outlined above, we believe that our model suggests that Biden would have won both the popular vote and the electoral votes and become the president of the United States. This was partially right in that he did win both but with a smaller margin than we had expected. In the end, he won 306 electoral votes and won 51.3% of the votes to become the 46th US president [@CNN]. However, our model underestimates the proportion of Trump voters around 8 - 10%, compared to the actual 48% of votes he got in the election. In the cleaning process, we had to reduce both the number of survey data and post-stratification data, that could have led to this difference. 
+
+## Weaknesses and Implications for Future Research 
+
+One major limitation of this research is the reliance on the quality of the survey data collected in October 2019. Any inaccuracies of COVID-19 affected the collection of the survey data, so we had to use the 2019 data. The election was held in November 2020, so there exists a time gap of one year between the data collection and the election, which may have affected the voting as one year gives enough time for voters to change their minds. In addition, any inaccuracies or biases within the survey could significantly impact the model's forecasts, especially, through the data cleaning process, which involved dropping observations with missing data. We reduced the survey dataset from 6,146 to 5,570 observations and the post-stratification dataset from 3,239,553 to 2,334,234 observations. This resulted in a loss of approximately 10% of the survey data and 30% of the post-stratification data. Such reductions could potentially impact the accuracy of our forecast results.
+
+Our analysis also involves some weaknesses of using predictive modeling to fully grasp the complexity of how elections work. Although our model picks up on some trends and changes in voter demographics, it also shows that predicting election outcomes accurately, particularly in states where the results could go either way, is difficult. The differences between what our model predicted and the actual election results underline the importance of continuously improving our models. This means adding more detailed data and possibly trying different methods to better understand how people vote. This experience has made it clear that to make our election predictions more accurate and trustworthy in the future, we need to take into account various factors, such as education levels, differences between urban and rural areas, and the evolving political scene. Therefore, future research should explore models that can accommodate multiple electoral outcomes, including third-party voting and more variables if possible. Using more accurate or applicable real-time data sources could complement traditional survey methods and offer fresh insights into voter preferences. Societal norms and political landscapes change over time. Therefore, future research should focus on emerging social issues that may influence voter behavior. In the 2024 Presidential election, climate change, technology policy, and social justice could play more significant roles in shaping electoral outcomes. 
+
+\newpage
+
+# References

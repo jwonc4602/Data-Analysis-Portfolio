@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# input data
+data/raw_data/usa_00002.dta
+data/raw_data/ns20191003/bannerbook_ns20191003.pdf
+data/raw_data/ns20191003/codebook_ns20191003.pdf
+data/raw_data/ns20191003/ns20191003.dta
+data/raw_data/ns20191003/ReadMe_ns20191003.txt
