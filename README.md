@@ -3,7 +3,11 @@ This repository is a personal space for storing and organizing my data analysis 
 
 ## 2020 US Election Result Analysis
 
-This project uses multilevel regression and post-stratification to analyze the impact of gender, education, and geography on 2020 U.S. Presidential Election voting patterns, particularly for Donald Trump. It finds significant differences in support across demographics, challenging previous assumptions about education and party support. The research highlights the importance of demographic diversity in electoral outcomes. You can find more details [here](https://github.com/Kjeongwoo99/2020_US_Election_Result_Analysis).
+This project uses multilevel regression and post-stratification to analyze the impact of gender, education, and geography on 2020 U.S. Presidential Election voting patterns, particularly for Donald Trump. It finds significant differences in support across demographics, challenging previous assumptions about education and party support. The research highlights the importance of demographic diversity in electoral outcomes. This is featured in the [instructor's note](https://tellingstorieswithdata.com/23-assessment.html#previous-examples-5) and you can find more details [here](https://github.com/Kjeongwoo99/2020_US_Election_Result_Analysis).
+
+## Forecasting Quarterback Efficiency with Passing EPA for the Latter Half of the NFL 2023 Season
+
+To decide quarterback efficiency by predicting the 'passing_epa' for each team in the remainder of the 2023 season in the NFL, which is from week 10 to week 18, using a logistic regression model based on the earlier weeks of the season. Have over 98% accuracy and You can find more details [here](https://github.com/jwonc4602/nfl-prediction).
 
 ## Analyzing Geographic and Demographic Patterns of Homelessness in Toronto
 
