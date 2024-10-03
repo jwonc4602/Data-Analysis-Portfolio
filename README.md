@@ -1,13 +1,16 @@
 # Data Analysis Projects
 This repository is a personal space for storing and organizing my data analysis and data visualization projects. You will find a collection of various data analysis tasks, especially related to the economics, politics, and sports I've worked on. If you have any questions related to this repo, feel free to reach out to me!
 
+## 23-24 English Premier League Forecast
+This study develops a Bayesian regression model to predict English Premier League standings by analyzing how team performance metrics such as possession percentages, goals scored, expected goals, progressive passes, and progressive carries influence league points. The findings indicate that goals scored and expected goals are the most significant predictors of team success, providing a quantitative basis for strategic planning in football. The results demonstrate the potential of using advanced statistical methods to enhance the predictability of sports outcomes, offering valuable insights for team management and sports analysts. By quantifying the impact of specific performance metrics, this research contributes to a deeper understanding of football dynamics and emphasizes the importance of data-driven decision-making in professional sports. You can find more details [here](https://github.com/jwonc4602/23-24-EPL-Forecast).
+
 ## 2020 US Election Result Analysis
 
 This project uses multilevel regression and post-stratification to analyze the impact of gender, education, and geography on 2020 U.S. Presidential Election voting patterns, particularly for Donald Trump. It finds significant differences in support across demographics, challenging previous assumptions about education and party support. The research highlights the importance of demographic diversity in electoral outcomes. This is featured in the [instructor's note](https://tellingstorieswithdata.com/23-assessment.html#previous-examples-5) and you can find more details [here](https://github.com/Kjeongwoo99/2020_US_Election_Result_Analysis).
 
 ## Forecasting Quarterback Efficiency with Passing EPA for the Latter Half of the NFL 2023 Season
 
-To decide quarterback efficiency by predicting the 'passing_epa' for each team in the remainder of the 2023 season in the NFL, which is from week 10 to week 18, using a logistic regression model based on the earlier weeks of the season. Have over 98% accuracy and You can find more details [here](https://github.com/jwonc4602/nfl-prediction).
+To decide quarterback efficiency by predicting the 'passing_epa' for each team in the remainder of the 2023 season in the NFL, which is from week 10 to week 18, using a logistic regression model based on the earlier weeks of the season. Have over 98% accuracy and you can find more details [here](https://github.com/jwonc4602/nfl-prediction).
 
 ## Analyzing Geographic and Demographic Patterns of Homelessness in Toronto
 
