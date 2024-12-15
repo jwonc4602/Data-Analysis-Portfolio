@@ -6,7 +6,7 @@ This study develops a Bayesian regression model to predict English Premier Leagu
 
 ## 2020 US Election Result Analysis
 
-This project uses multilevel regression and post-stratification to analyze the impact of gender, education, and geography on 2020 U.S. Presidential Election voting patterns, particularly for Donald Trump. It finds significant differences in support across demographics, challenging previous assumptions about education and party support. The research highlights the importance of demographic diversity in electoral outcomes. This is featured in the [instructor's note](https://tellingstorieswithdata.com/23-assessment.html#previous-examples-5) and you can find more details [here](https://github.com/Kjeongwoo99/2020_US_Election_Result_Analysis).
+This project uses multilevel regression and post-stratification to analyze the impact of gender, education, and geography on 2020 U.S. Presidential Election voting patterns, particularly for Donald Trump. It finds significant differences in support across demographics, challenging previous assumptions about education and party support. The research highlights the importance of demographic diversity in electoral outcomes. This is featured in the [instructor's note](https://tellingstorieswithdata.com/25-papers.html#previous-examples-6) and you can find more details [here](https://github.com/Kjeongwoo99/2020_US_Election_Result_Analysis).
 
 ## Forecasting Quarterback Efficiency with Passing EPA for the Latter Half of the NFL 2023 Season
 
