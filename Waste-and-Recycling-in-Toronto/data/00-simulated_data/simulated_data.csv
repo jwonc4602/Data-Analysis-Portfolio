@@ -1,0 +1,201 @@
+WARD,DAYS SERVICED,ASSET TYPE,STATUS
+10,5,WR3,Existing
+6,7,WR4,Temporarily Removed
+5,6,WR4,Existing
+9,5,WR3,Existing
+5,5,WR4,Removed
+6,5,WR3,Removed
+4,7,WR4,Temporarily Removed
+2,5,WR1,Removed
+7,5,WR4,Removed
+6,5,WR3,Existing
+10,6,WR1,Temporarily Removed
+6,6,WR3,Temporarily Removed
+4,5,WR1,Existing
+8,7,WR4,Removed
+4,6,WR2,Existing
+4,7,WR3,Removed
+5,7,WR1,Existing
+8,6,WR2,Temporarily Removed
+4,6,WR2,Existing
+8,5,WR3,Existing
+3,5,WR2,Removed
+4,6,WR1,Temporarily Removed
+10,6,WR2,Existing
+5,5,WR3,Removed
+2,7,WR3,Temporarily Removed
+8,6,WR2,Temporarily Removed
+4,5,WR1,Removed
+3,5,WR3,Existing
+7,5,WR4,Existing
+9,7,WR4,Removed
+3,6,WR4,Existing
+6,6,WR1,Existing
+4,5,WR3,Removed
+8,6,WR2,Existing
+10,6,WR1,Removed
+2,7,WR1,Temporarily Removed
+5,5,WR1,Removed
+6,6,WR3,Existing
+1,7,WR4,Removed
+6,7,WR4,Existing
+8,5,WR2,Removed
+3,5,WR3,Existing
+6,6,WR3,Temporarily Removed
+1,6,WR4,Temporarily Removed
+1,6,WR3,Temporarily Removed
+9,5,WR4,Removed
+8,6,WR1,Temporarily Removed
+10,7,WR4,Existing
+1,5,WR2,Existing
+8,6,WR1,Temporarily Removed
+10,5,WR2,Removed
+6,5,WR1,Temporarily Removed
+3,7,WR2,Existing
+9,7,WR2,Existing
+3,6,WR4,Temporarily Removed
+6,7,WR4,Temporarily Removed
+9,6,WR4,Removed
+10,5,WR2,Removed
+7,6,WR2,Existing
+6,7,WR2,Existing
+8,5,WR4,Removed
+9,7,WR2,Removed
+3,7,WR1,Removed
+3,7,WR3,Existing
+2,7,WR3,Temporarily Removed
+5,6,WR4,Temporarily Removed
+8,5,WR1,Temporarily Removed
+10,7,WR1,Existing
+7,7,WR1,Existing
+6,7,WR4,Existing
+4,5,WR3,Temporarily Removed
+9,6,WR3,Existing
+7,7,WR4,Removed
+3,6,WR1,Removed
+6,7,WR2,Existing
+5,6,WR3,Removed
+8,6,WR1,Removed
+1,6,WR1,Existing
+4,5,WR1,Temporarily Removed
+7,6,WR3,Removed
+3,6,WR1,Removed
+9,7,WR3,Temporarily Removed
+4,5,WR4,Existing
+1,6,WR2,Removed
+6,5,WR1,Temporarily Removed
+6,5,WR1,Existing
+10,7,WR1,Removed
+6,7,WR3,Removed
+5,7,WR3,Temporarily Removed
+5,6,WR2,Temporarily Removed
+1,7,WR4,Removed
+2,7,WR4,Temporarily Removed
+6,6,WR3,Existing
+10,6,WR2,Temporarily Removed
+2,5,WR1,Temporarily Removed
+5,5,WR1,Removed
+4,6,WR1,Temporarily Removed
+3,5,WR2,Existing
+10,6,WR2,Existing
+4,7,WR1,Removed
+5,7,WR2,Temporarily Removed
+10,7,WR2,Existing
+6,5,WR2,Temporarily Removed
+6,5,WR1,Removed
+9,6,WR1,Existing
+3,7,WR3,Removed
+9,7,WR2,Existing
+6,5,WR2,Existing
+8,6,WR2,Temporarily Removed
+1,7,WR2,Existing
+9,6,WR3,Existing
+2,5,WR3,Existing
+6,6,WR1,Existing
+8,7,WR4,Existing
+6,7,WR4,Temporarily Removed
+3,6,WR3,Existing
+7,6,WR4,Removed
+5,5,WR2,Existing
+6,6,WR2,Removed
+7,6,WR3,Removed
+3,6,WR4,Removed
+3,6,WR3,Removed
+7,7,WR2,Existing
+9,7,WR2,Temporarily Removed
+8,5,WR2,Temporarily Removed
+3,5,WR4,Removed
+10,7,WR3,Removed
+6,5,WR3,Removed
+7,6,WR3,Existing
+2,5,WR1,Temporarily Removed
+5,7,WR3,Removed
+5,5,WR1,Removed
+9,6,WR1,Existing
+3,7,WR1,Temporarily Removed
+8,6,WR4,Temporarily Removed
+3,7,WR2,Existing
+8,7,WR3,Removed
+3,5,WR3,Temporarily Removed
+9,5,WR2,Removed
+4,6,WR2,Removed
+8,5,WR3,Temporarily Removed
+4,7,WR4,Removed
+3,5,WR4,Temporarily Removed
+10,6,WR3,Removed
+7,7,WR1,Temporarily Removed
+1,6,WR1,Temporarily Removed
+9,5,WR4,Removed
+3,5,WR1,Existing
+2,7,WR4,Temporarily Removed
+5,6,WR3,Removed
+10,7,WR2,Temporarily Removed
+6,7,WR4,Removed
+9,7,WR2,Removed
+1,5,WR2,Temporarily Removed
+3,7,WR1,Existing
+9,7,WR2,Removed
+9,7,WR4,Temporarily Removed
+4,6,WR3,Temporarily Removed
+5,7,WR3,Temporarily Removed
+1,5,WR4,Temporarily Removed
+3,7,WR2,Removed
+6,6,WR3,Temporarily Removed
+5,6,WR2,Existing
+6,7,WR3,Temporarily Removed
+2,6,WR2,Removed
+3,6,WR4,Existing
+2,5,WR3,Existing
+7,7,WR1,Existing
+6,7,WR3,Existing
+7,7,WR4,Temporarily Removed
+8,7,WR3,Existing
+4,6,WR3,Existing
+1,7,WR3,Removed
+7,7,WR3,Temporarily Removed
+10,6,WR1,Removed
+8,6,WR2,Removed
+3,6,WR4,Temporarily Removed
+10,6,WR4,Removed
+2,7,WR1,Removed
+8,7,WR3,Temporarily Removed
+1,7,WR2,Existing
+8,5,WR3,Temporarily Removed
+8,6,WR2,Removed
+6,6,WR3,Temporarily Removed
+10,7,WR1,Existing
+5,6,WR1,Existing
+4,7,WR3,Existing
+10,5,WR3,Temporarily Removed
+4,6,WR3,Removed
+1,5,WR2,Removed
+6,7,WR3,Existing
+6,6,WR3,Removed
+3,7,WR2,Removed
+4,7,WR3,Temporarily Removed
+4,6,WR3,Temporarily Removed
+3,7,WR4,Removed
+1,7,WR1,Removed
+3,7,WR4,Existing
+1,5,WR1,Temporarily Removed
+9,7,WR4,Removed

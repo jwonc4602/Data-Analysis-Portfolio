@@ -1,0 +1,178 @@
+---
+title: "Analyzing The National's Musical Trajectory from 2001 to 2023"
+subtitle: "A Spotify Data Analysis of Danceability, Energy, Instrumentalness, and Valence Trends"
+author: 
+  - Andrew Goh, Yisu Hou, Jiwon Choi, Xiaolu Ji
+thanks: "Code and data are available at: https://github.com/mushroomcarbon/Spotify."
+date: today
+date-format: long
+abstract: "This study analyzes the evolution of musical attributes in The National’s discography, focusing on danceability, energy, instrumentalness, and valence across their album releases. Using data from Spotify’s API, we analyze how these attributes have fluctuated over the years and visualize their progression through a series of plots. Our findings suggest that energy and instrumentalness exhibit more variability, while danceability and valence have followed relatively smoother trajectories. These insights contribute to the growing field of music analytics by offering a deeper understanding of the artistic and sonic evolution of a famous band within the indie rock genre."
+format: pdf
+number-sections: true
+bibliography: references.bib
+header-includes:
+  - \usepackage{placeins}
+---
+
+
+# Introduction
+
+In recent years, the music analytics field has advanced significantly, providing new insights into how artists' sounds evolve over time. This study delves into the discography of The National, a prominent indie rock band known for their rich, emotive soundscapes and introspective lyricism, by examining key musical attributes such as danceability, energy, instrumentalness, and valence across their albums. By utilizing data drawn from Spotify's API, we aim to track how these characteristics have transformed throughout the band's career, illustrating their progression with comprehensive visualizations. Our analysis reveals notable trends and variations, particularly pointing out that energy and instrumentalness exhibit considerable changes, perhaps reflecting shifts in the band’s artistic direction, experimentation, or production choices. Conversely, danceability and valence maintain relatively stable trajectories, possibly indicating consistency in their core aesthetic approach. These insights not only illuminate The National's evolving sound but also contribute to the broader conversation in music analytics, enhancing our understanding of artistic development and genre dynamics within the indie rock landscape. Through this study, we offer a deeper appreciation of how technological tools can be leveraged to explore and comprehend music's intricate evolution over time.
+
+# Data {#sec-mydatasection}
+
+The R programming language [@talia], dplyr [@dplyr], tidyverse[@thereferencecanbewhatever] were used to download, modify, and analyse data obtained from Spotify [@spotify_api] using the SpotifyR package [@spotifyr] regarding music from The National [@the_national]. Styler [@styler] was used to style the code. Summary statistics for variables of interest are displayed in @tbl-summary. It was created with R packages knitr [@knitr] and kableExtra [@kextra].
+
+Variable Measurements:
+
+Danceability: This metric quantifies how suitable a track is for dancing, ranging from 0.0 to 1.0. It considers elements such as tempo, rhythm stability, beat strength, and overall regularity, all influencing a track's likelihood of encouraging dancing.
+
+Energy: Energy is also measured on a scale from 0.0 to 1.0, reflecting the intensity and activity within a track. High-energy songs are typically fast-paced, loud, and noisy, while lower-energy tracks are slower and more relaxed. Energy is influenced by elements such as dynamic range, perceived loudness, and tempo.
+
+Instrumentalness: This attribute measures the probability of a track being purely instrumental, also ranging from 0.0 to 1.0. The closer the value is to 1.0, the greater the likelihood that the track contains no vocals. Tracks with values above 0.5 are considered more likely to be instrumental.
+
+Valence: Valence refers to the musical positivity or happiness conveyed by a track, again measured from 0.0 to 1.0. Tracks with high valence sound more positive (e.g., happy, cheerful, euphoric), while those with low valence sound more negative or somber (e.g., sad, melancholic).
+
+```{r}
+#| label: fig-dance
+#| fig-cap: Danceability Over Album Release Years
+#| echo: false
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+library(here)
+library(knitr)
+library(kableExtra)
+
+# Load the data
+data <- read_rds(here::here("data/analysis_data/the_national_cleaned.rds"))
+
+# Plot 1: danceability over time
+ggplot(data, aes(x = album_release_year, y = danceability)) +
+  geom_point(alpha = 0.7, color = "black") +
+  stat_summary(fun = mean, geom = "line", color = "green", size = 1.2) +
+  labs(
+    x = "Album Release Year",
+    y = "Danceability"
+  ) +
+  theme_minimal()
+```
+\FloatBarrier
+
+@fig-dance displays the danceability of music by The National since the band’s establishment. The National showed consistently high danceability throughout their career despite a visible drop after their initial 2001 album and their 2017 album. This trend reveals that The National had a stable style after it established itself as a rock band.
+
+```{r}
+#| label: fig-energy
+#| fig-cap: Energy Over Album Release Years
+#| echo: false
+#| warning: false
+#| message: false
+
+# Plot 2: energy over time
+ggplot(data, aes(x = album_release_year, y = energy)) +
+  geom_point(alpha = 0.7, color = "black") +
+  stat_summary(fun = mean, geom = "line", color = "blue", size = 1.2) +
+  labs(
+    x = "Album Release Year",
+    y = "Energy"
+  ) +
+  theme_minimal()
+```
+\FloatBarrier
+
+Energy was more volatile compared to danceability, as displayed in @fig-energy. In the 2001 and 2019 releases, the average energy levels were around 0.5, while in most years, energy levels were greater than 0.6. This demonstrates The Nationa’s willingness to experiment, though it held on to its rock identity by producing music with high overall energy.
+
+```{r}
+#| label: fig-instrumental
+#| fig-cap: Instrumentalness Over Album Release Years
+#| echo: false
+#| warning: false
+#| message: false
+
+# Plot 3: instrumentalness over time
+ggplot(data, aes(x = album_release_year, y = instrumentalness)) +
+  geom_point(alpha = 0.7, color = "black") +
+  stat_summary(fun = mean, geom = "line", color = "red", size = 1.2) +
+  labs(
+    x = "Album Release Year",
+    y = "Instrumentalness"
+  ) +
+  theme_minimal()
+```
+\FloatBarrier
+
+Instrumentalness was the most volatile aspect of The National’s musical style over time. As shown in @fig-instrumental. We can identify that the band experimented with very high instumentalness in 2007 and 2017, while the majority of songs released in other years showed a moderate level of instrumentalness. Combined with other trends, we can infer that The National is more willing to attempt music with different compositions, such as songs with more instrumentals and fewer lyrics, but unwilling to shift its fundamental rock style.
+
+```{r}
+#| label: fig-valence
+#| fig-cap: Valence Over Album Release Years
+#| echo: false
+#| warning: false
+#| message: false
+
+# Plot 4: valence over time
+ggplot(data, aes(x = album_release_year, y = valence)) +
+  geom_point(alpha = 0.7, color = "black") +
+  stat_summary(fun = mean, geom = "line", color = "orange", size = 1.2) +
+  labs(
+    x = "Album Release Year",
+    y = "Valence"
+  ) +
+  theme_minimal()
+```
+\FloatBarrier
+
+Lastly, as indicated in @fig-valence, The Nationals maintained a moderate level of valence throughout the years, consistent with the observation that the band strived to keep its fundamental identity.
+
+# Discussion
+
+Spotify’s API uses algorithms to estimate these musical attributes, but like any automated system, these measurements come with inherent limitations:
+
+Danceability and Energy are listed as variable measurements since these metrics are useful, they are influenced by a combination of tempo, rhythm, and loudness, which are subjectively perceived by listeners. This can introduce bias, as not all listeners may agree with the "danceability" or "energy" rating that Spotify assigns to a track. In addition, The measurement of instrumentals is more straightforward but can still be prone to misclassification, especially in tracks where vocals are used in a non-traditional or minimalistic manner (e.g., vocal samples used as an instrument rather than for lyrics). Finally, valence is perhaps the most subjective metric, as it attempts to quantify the emotional tone of a track. The algorithm uses musical cues like key, tempo, and mood, but it cannot fully account for lyrical content or the cultural context of the music, which are often significant factors in how a song's emotion is perceived by listeners.
+
+Certain limitations include algorithmic bias, where all the measurements result from machine learning algorithms that may not fully capture the nuanced emotional or structural qualities of music. While these algorithms are highly advanced, they are still based on mathematical models that may overlook certain cultural, lyrical, or artistic nuances. Another limitation would be the subjectivity of musical interpretation. Under this scenario, music is a subjective art form, and attributes like energy or valence are influenced by listener interpretation. Thus, there may be discrepancies between what the algorithm detects and what different audiences perceive. For example, a song with low valence may still evoke positive emotions depending on the listener's personal experiences. Eventually, temporal and contextual variability as Spotify’s measurements are static, meaning they don't account for how the perception of a track might change over time or in different contexts. A song may be considered more "danceable" or "happy" depending on where or when it's played, which is not captured in this type of analysis.
+
+By recognizing these limitations, we can more critically engage with the data, understanding that while useful, these metrics provide only one dimension of analysis. Future work could incorporate qualitative assessments or crowd-sourced data to cross-check and complement these algorithmically generated insights.
+
+\newpage
+
+# Appendix {.unnumbered}
+
+```{r}
+#| label: tbl-summary
+#| tbl-cap: Summary Statistics of Variables of Interest
+#| echo: false
+#| warning: false
+#| message: false
+
+summary <- data %>%
+  summarise(
+    across(
+      c(album_release_year, danceability, energy, instrumentalness, valence),
+      list(
+        Mean = ~ round(mean(.), 2),
+        SD = ~ round(sd(.), 2)
+      ),
+      .names = "{col}_{fn}"
+    )
+  )
+
+summary_table <- summary %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "Statistic",
+    values_to = "Value"
+  )
+
+kable(summary_table,
+  col.names = c("Statistic", "Value"),
+  format = "latex"
+) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+```
+
+\newpage
+
+# References
