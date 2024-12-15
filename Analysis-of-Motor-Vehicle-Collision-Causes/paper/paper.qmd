@@ -1,0 +1,387 @@
+---
+title: "Analysis of Motor Vehicle Collision Causes in Toronto from 2006 to 2023"
+subtitle: "Assessing the Interplay of Human behaviour and Environmental Factors in Predicting Accident Severity and High-Risk Scenarios"
+author: 
+  - Jiwon Choi
+thanks: "Code and data are available at: https://github.com/jwonc4602/Analysis-of-Motor-Vehicle-Collision-Causes."
+date: today
+date-format: long
+abstract: "This study analyzes motor vehicle collisions in Toronto from 2006 to 2023, focusing on the interaction between human behaviours—such as speeding, aggressive driving, and alcohol use—and environmental conditions like visibility and road surfaces. The findings show that while environmental factors increase risks, aggressive driving is the strongest predictors of severe accidents. These results highlight the need for targeted interventions in both driver behaviour and infrastructure to improve urban traffic safety."
+format: pdf
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+#### Workspace set-up ####
+
+## Load packages
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(knitr)
+library(here)
+library(gridExtra)
+library(grid)
+
+#read in cleaned data #
+#total_cleaned_data
+cleaned_data <- read.csv(here::here("data/analysis_data/total_cleaned_data.csv"))
+show_col_types = FALSE
+
+# human factors data
+human_factors_data <- read.csv(here::here("data/analysis_data/human_factors_data.csv"))
+show_col_types = FALSE
+
+# environmental factors data
+environmental_factors_data <- read.csv(here::here("data/analysis_data/environmental_factors_data.csv"))
+show_col_types = FALSE
+
+```
+
+
+# Introduction
+
+Motor vehicle collisions are a leading cause of injury and fatality in urban areas, driving ongoing efforts to improve road safety. In an expanding city like Toronto, understanding the causes of traffic accidents is important for shaping effective policies. This paper examines traffic collisions in Toronto over 17 years, focusing on how human behaviour and environmental conditions influence the frequency and severity of accidents.
+
+While much research has been done on factors such as speeding or poor road conditions, there is still a lack of understanding regarding the interaction between human behaviours and environmental conditions in creating high-risk situations. Most studies focus on these factors separately, missing how they combine to increase accident risks. This research addresses that gap by analyzing both human and environmental factors simultaneously, offering a more complete view of what leads to traffic accidents in an urban setting.
+
+Using data from Toronto Police Services, this study analyzes the role of human factors like speeding, aggressive driving, alcohol use, and disability alongside environmental factors such as visibility, lighting, traffic control, and road conditions. The results show that aggressive driving and alcohol use, even under good road conditions, are major contributors to accidents. High-risk scenarios, like aggressive driving on dry roads with clear visibility, emerge as leading causes of collisions. These findings suggest that targeted actions, such as stricter enforcement against reckless driving and improved traffic controls in key areas, could help reduce accident rates.
+
+The rest of the paper is organized as follows. @sec-data outlines the data and methodology and analyzes factors contributing to traffic collisions. @sec-discussion discusses the results and potential interventions. The final sections of the discussion part evaluate the study's limitations and propose directions for future research.
+
+# Data {#sec-data}
+
+## Data Source and Collection
+
+This research is based on a dataset published by Toronto Police Services, which is accessible through the City of Toronto’s OpenDataToronto Library [@rOpenDataToronto]. The specific dataset includes all traffic collision events in Toronto where a person was either Killed or Seriously Injured (KSI) since 2006. The data was compiled and examined using the R statistical programming software [@r], supplemented by various tools such as `tidyverse` [@rTidyverse], `ggplot2` [@rGgplot2], `dplyr` [@rDplyr], `readr` [@rReadr], `gridExtra` [@gridExtra], `grid` [@R-base-grid], `knitr` [@rknitr], and `here` [@rHere].
+
+This traffic accident dataset contains 18,957 entries from a citywide survey, detailing various factors involved in incidents. It includes 50 variables covering geographic data, such as accident locations, and behavioral data, like driver conditions and alcohol involvement. The dataset spans several years and captures environmental conditions, road types, and the actions of drivers and pedestrians during accidents. It aims to provide a comprehensive view of research and policy efforts related to urban traffic safety and accident prevention. Although the dataset was last updated September 27, 2024, but only contains observations from 2006 to 2023. 
+
+The `acclass` category classifies the severity of traffic collisions into "Fatal," "Non-Fatal Injury," and "None or Others." The original categories "None" and "Property Damage Only" were combined into "None or Others" since both involve accidents without human injury. This consolidation simplifies the analysis, focusing on accidents with a direct human impact. "Fatal" refers to collisions causing severe injury or death, while "Non-Fatal Injury" includes incidents with injuries but no fatalities. The accident classification data shows that most collisions result in non-fatal injuries (16,268), while fatal accidents account for 2,670 cases. The 'None or Others' category has the fewest incidents, with only 19 cases recorded. This highlights the high frequency of non-fatal injuries, emphasizing the need for policies focused on injury prevention. (see @fig-acclass-distribution)
+
+```{r}
+#| message: false
+#| echo: false
+#| label: fig-acclass-distribution
+#| fig-cap: Distribution of Accident Classifications
+
+# Ensure the 'acclass' column is treated as a factor
+cleaned_data <- cleaned_data %>%
+  mutate(acclass = factor(acclass, levels = c("Fatal", "Non-Fatal Injury", "None or Others")))
+
+# Summarise the counts for each 'acclass' category
+acclass_summary <- cleaned_data %>%
+  count(acclass)
+
+# Create the bar plot
+ggplot(acclass_summary, aes(x = acclass, y = n, fill = acclass)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = n), vjust = -0.5, nudge_y = 200, size = 3, fontface = "plain", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Accident Classifications",
+       x = "Accident Classification (acclass)",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(ylim = c(0, max(acclass_summary$n) * 1.1))
+
+```
+
+## Human Factors
+
+The cleaned data is split into two sets. The first focuses on human factors, particularly driver behaviours, and conditions that may have contributed to accidents. Four key categories—`speeding,` `ag_driv,` `alcohol` and `disability`—were selected due to their known impact on traffic accidents. Each is recorded as either "None" or "Yes," indicating whether that factor was present in the incident. These categories focus on preventable human actions or conditions that are strongly linked to traffic risks. (see @tbl-cleaned-human-factors-data)
+
+```{r}
+#| message: false
+#| echo: false
+#| label: tbl-cleaned-human-factors-data
+#| tbl-cap: Sample of Human Factors of Collision Data
+
+head (environmental_factors_data, 5) |>
+  kable(
+    col.names = c("date", "speeding", "ag_driv", "alcohol", "disability"),
+  booktabs = TRUE
+  )
+```
+
+1. **Speeding**: Tracks whether speeding was a factor in the collision. Speeding reduces reaction time and increases crash severity, making it a leading cause of accidents.
+
+2. **Aggressive Driving (ag_driv)**: Refers to reckless or distracted behaviours, such as texting while driving. These actions impair judgment and reaction time, significantly increasing accident risk.
+
+3. **Alcohol**: Captures whether alcohol was involved in the collision. Alcohol impairs motor skills and decision-making, contributing to many severe and fatal accidents.
+
+4. **Disability**: Notes if a medical or physical disability affected the driver's ability to control the vehicle. Disabilities can impair a driver's capacity to respond to road conditions, making this a key safety factor.
+
+@fig-human-factors-frequency-distribution illustrates the frequency of human factors contributing to traffic collisions. Aggressive and disturbed driving (ag_driv) appears most frequently, with 9,836 occurrences, followed by speeding, which accounts for 2,694 cases. Alcohol use and disability are less common, with 808 and 493 incidents, respectively. Understanding these factors is important for identifying the human behaviours that increase traffic accident risks and for shaping strategies to reduce both the frequency and severity of collisions.
+
+```{r}
+#| message: false
+#| echo: false
+#| label: fig-human-factors-frequency-distribution
+#| fig-cap: Frequency of Human Factors in Traffic Collisions
+
+# Convert relevant columns to factors and reorder them for better readability
+human_factors_data <- human_factors_data %>%
+  mutate(speeding = factor(speeding, levels = c("None", "Yes")),
+         ag_driv = factor(ag_driv, levels = c("None", "Yes")),
+         alcohol = factor(alcohol, levels = c("None", "Yes")),
+         disability = factor(disability, levels = c("None", "Yes")))
+
+# Frequency summary for each factor
+factor_summary <- human_factors_data %>%
+  summarise(
+    speeding = sum(speeding == "Yes"),
+    ag_driv = sum(ag_driv == "Yes"),
+    alcohol = sum(alcohol == "Yes"),
+    disability = sum(disability == "Yes")
+  ) %>%
+  tidyr::gather(key = "factor", value = "count")
+
+# Reorder factors based on count for better visualization
+factor_summary <- factor_summary %>%
+  mutate(factor = forcats::fct_reorder(factor, count, .desc = TRUE))
+
+# Bar plot with thinner numbers and taller graph
+ggplot(factor_summary, aes(x = factor, y = count, fill = factor)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = count), vjust = -0.5, nudge_y = 200, size = 3, fontface = "plain", color = "black") +  # Thinner numbers
+  theme_minimal() +
+  labs(title = "Frequency of Human Factors in Traffic Collisions",
+       x = "Human Factors",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Adjust x-axis labels
+  coord_cartesian(ylim = c(0, 11000))  # Adjust the y-axis limit to make the graph taller
+
+```
+
+
+## Environmental Factors
+
+The second dataset focuses on environmental factors that influence traffic collisions, including conditions such as traffic control, visibility, lighting, and road surface. These elements shape driver behaviour and impact accident risk. To simplify analysis and improve consistency, categories were consolidated, providing a clearer understanding of how these factors affect accidents and where safety improvements are needed. (see @tbl-cleaned-environmental-factors-data)
+
+```{r}
+#| message: false
+#| echo: false
+#| label: tbl-cleaned-environmental-factors-data
+#| tbl-cap: Sample of Environmental Factors of Collision Data
+
+head (environmental_factors_data, 5) |>
+  kable(
+    col.names = c("date", "traffctl", "visibility", "light", "rdsfcond"),
+  booktabs = TRUE
+  )
+```
+
+1. **Traffic Control Type (traffctl)**: This was simplified into "No Control," "Traffic Signal," and "Others." The "Others" group combines less common traffic controls like stop signs and pedestrian crossovers. This distinction highlights the impact of varying levels of traffic regulation on driver behaviour, focusing on scenarios where traffic control presence may influence accident risks.
+
+2. **Visibility**: Conditions were grouped into "Clear" and "Disturbed," with "Disturbed" covering adverse weather such as fog, rain, and snow. This division highlights the contrast between ideal and hazardous visibility, which directly affects a driver's ability to navigate safely. Poor visibility is a known factor in accidents, making this an essential category for identifying environmental hazards.
+
+3. **Light**: Lighting conditions were combined into "Dark," "Daylight," and "Dim Light." These reflect the most relevant lighting environments, with "Dark" including both natural and artificial lighting, and "Dim Light" covering intermediate conditions like dawn and dusk. Lighting affects visibility and reaction times, and this grouping helps assess its role in accidents.
+
+4. **Road Surface Condition (rdsfcond)**: This was grouped into "Dry," "Wet," and "Others." The "Others" category includes ice, snow, and slush, conditions that greatly reduce vehicle traction. Focusing on major surface conditions helps clarify how road conditions influence accident risk, especially in wet or slippery environments.
+
+@fig-environmental-factors-traffic-control-visibility and @fig-environmental-factors-light-road-surface show that there were a similar number of collisions with no traffic control, totaling 9,021, and with traffic signals, at 8,035. The majority occurred under clear visibility with 16,373 collisions, during daylight with 10,930 collisions, and on dry road surfaces with 15,231 collisions. In contrast, there were 2,584 collisions under disturbed visibility and 729 under dim light conditions. Wet surfaces accounted for 3,140 collisions, while dark conditions saw 7,298 collisions, highlighting the importance of environmental and visibility factors in traffic accidents.
+
+
+```{r}
+#| message: false
+#| echo: false
+#| label: fig-environmental-factors-traffic-control-visibility
+#| fig-cap: Environmental Factors Affecting Collisions - Traffic Control and Visibility
+
+# Common theme
+common_theme <- theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Slightly larger font for clarity
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    plot.title = element_text(size = 10),
+    plot.margin = margin(t = 15, r = 15, b = 15, l = 15)  # Margins for more space
+  )
+
+# First plot: Traffic Control Type and Visibility Conditions
+
+# Plot 1: Traffic Control Type
+plot1 <- ggplot(environmental_factors_data, aes(x = traffctl)) +
+  geom_bar(fill = "steelblue") +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) +
+  common_theme +
+  labs(title = "Collisions by Traffic Control Type",
+       x = "Traffic Control Type",
+       y = "Number of Collisions") +
+  coord_cartesian(ylim = c(0, max(table(environmental_factors_data$traffctl)) * 1.2))
+
+# Plot 2: Visibility Condition
+plot2 <- ggplot(environmental_factors_data, aes(x = visibility)) +
+  geom_bar(fill = "steelblue") +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) +
+  common_theme +
+  labs(title = "Collisions by Visibility",
+       x = "Visibility",
+       y = "Number of Collisions") +
+  coord_cartesian(ylim = c(0, max(table(environmental_factors_data$visibility)) * 1.2))
+
+# Arrange these two plots side by side
+first_plot_pair <- grid.arrange(plot1, plot2, ncol = 2, 
+                                top = textGrob("Environmental Factors Affecting Collisions: Traffic Control and Visibility", gp = gpar(fontsize = 10, fontface = "bold")))
+
+```
+
+```{r}
+#| message: false
+#| echo: false
+#| label: fig-environmental-factors-light-road-surface
+#| fig-cap: Environmental Factors Affecting Collisions - Light and Road Surface
+
+# Common theme
+common_theme <- theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    plot.title = element_text(size = 10),  # No bold here
+    plot.margin = margin(t = 15, r = 15, b = 15, l = 15)  # Margins for more space
+  )
+
+# Second plot: Lighting Conditions and Road Surface Condition
+
+# Plot 3: Lighting Conditions
+plot3 <- ggplot(environmental_factors_data, aes(x = light)) +
+  geom_bar(fill = "steelblue") +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) +
+  common_theme +  # Apply the common theme
+  labs(title = "Collisions by light",
+       x = "Lighting Condition",
+       y = "Collisions") +
+  coord_cartesian(ylim = c(0, max(table(environmental_factors_data$light)) * 1.2))
+
+# Plot 4: Road Surface Conditions
+plot4 <- ggplot(environmental_factors_data, aes(x = rdsfcond)) +
+  geom_bar(fill = "steelblue") +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) +
+  common_theme +  # Apply the common theme
+  labs(title = "Collisions by rdsfcond",
+       x = "Road Surface Condition",
+       y = "Collisions") +
+  coord_cartesian(ylim = c(0, max(table(environmental_factors_data$rdsfcond)) * 1.2))
+
+# Arrange these two plots side by side
+second_plot_pair <- grid.arrange(plot3, plot4, ncol = 2, 
+                                 top = textGrob("Environmental Factors Affecting Collisions: Light and Road Surface Condition", gp = gpar(fontsize = 10, fontface = "bold")))
+
+```
+
+# Discussion {#sec-discussion}
+
+## High-Risk Scenarios for Road Accidents
+
+@fig-high-risk-combinations-for-accident shows the relationship between environmental factors—traffic control, visibility, lighting, and road surface—and human behaviours like speeding, aggressive driving, alcohol use, and disability. It highlights clear patterns where certain combinations lead to higher accident rates.
+
+A fatal collision frequently occurs when traffic signals are present, clear visibility, daylight, the road is dry, and aggressive driving is involved. Even in ideal environmental conditions, aggressive driving leads to the highest number of accidents. This suggests that behaviours like tailgating and reckless overtaking pose significant risks, even on dry roads with good visibility. To reduce accidents in such areas, stricter enforcement of speed limits and penalties for aggressive driving may be necessary.
+
+Another high-risk combination is no traffic control, clear visibility, daylight, and dry roads with no human factors involved. The lack of traffic control in this scenario appears to give drivers a false sense of safety, leading to reckless behaviour. Installing traffic controls, like stop signs or roundabouts, in areas with high accident rates could help reduce these incidents.
+
+This shows that while environmental factors like no traffic controls, wet roads and poor visibility are important, aggressive driving is a key behaviour that amplifies risk, even in favorable conditions. Focusing on improving infrastructure and stricter enforcement against aggressive driving and alcohol-related offenses could significantly lower accident rates in these high-risk scenarios.
+
+```{r fig.width=12, fig.height=15}
+#| message: false
+#| echo: false
+#| label: fig-high-risk-combinations-for-accident
+#| fig-cap: High-Risk Scenarios for Collisions
+# Prepare the data by summarizing relevant columns and creating a count of combinations
+heatmap_data <- cleaned_data %>%
+  group_by(traffctl, visibility, light, rdsfcond, speeding, ag_driv, alcohol, disability) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+# Combine human factor columns into one for the x-axis
+heatmap_data$human_factors <- interaction(heatmap_data$speeding,
+                                          heatmap_data$ag_driv,
+                                          heatmap_data$alcohol,
+                                          heatmap_data$disability)
+
+# Combine environmental factor columns into one for the y-axis
+heatmap_data$environmental_factors <- interaction(heatmap_data$traffctl,
+                                                  heatmap_data$visibility,
+                                                  heatmap_data$light,
+                                                  heatmap_data$rdsfcond)
+
+# Create the heatmap plot with better alignment
+ggplot(heatmap_data, aes(x = human_factors, 
+                         y = environmental_factors, 
+                         fill = count)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  labs(x = "Human Factors (speeding, ag_driv, alcohol, disability)", 
+       y = "Environmental Factors (traffctl, visibility, light, rdsfcond)", 
+       fill = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 15), # Increase text size and rotate
+        axis.text.y = element_text(size = 17), # Increase text size
+        axis.title = element_text(size = 20), # Increase axis title size
+        plot.title = element_text(size = 22),  # Increase title size
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 18),
+        panel.grid.major = element_blank(), # Remove gridlines
+        panel.grid.minor = element_blank()) +
+  ggtitle("Heatmap of Environmental and Human Factors")
+
+```
+ 
+
+## Can Environmental and Human Factors Serve as Early Warning Indicators?
+```{r}
+#| message: false
+#| echo: false
+#| label: fig-human-factor-trend-over-time
+#| fig-cap: Trends of human factors in traffic collisions over time
+
+# Convert the date column to date format
+human_factors_data <- human_factors_data %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d"))
+
+# Summarise the presence of each factor by year
+trend_data <- human_factors_data %>%
+  mutate(year = lubridate::year(date)) %>%
+  group_by(year) %>%
+  summarise(
+    speeding = sum(speeding == "Yes"),
+    ag_driv = sum(ag_driv == "Yes"),
+    alcohol = sum(alcohol == "Yes"),
+    disability = sum(disability == "Yes")
+  ) %>%
+  tidyr::gather(key = "factor", value = "count", -year)
+
+# Line plot to show trends over time
+ggplot(trend_data, aes(x = year, y = count, color = factor)) +
+  geom_line(linewidth = 0.8) +
+  theme_minimal() +
+  labs(title = "Trends in Human Factors Over Time",
+       x = "Year",
+       y = "Count of Collisions",
+       color = "Human Factor")
+```
+
+With advances in data-driven technologies, it's now possible to predict the severity of motor vehicle accidents by analyzing a combination of human behaviours and environmental conditions. This section focuses on how predictive models can be developed to assess the likelihood of severe accidents using factors such as speeding, alcohol use, poor road conditions, and low visibility.
+
+For instance, a system could gather real-time environmental data, such as weather and road surface conditions, and combine it with information on traffic behaviours, like speeding patterns, to determine if an area is at high risk for serious accidents. This type of early warning system could be integrated into navigation apps or smart cars to alert drivers to potential dangers and help prevent accidents before they occur.
+
+Predictive analytics can identify the most dangerous combinations of factors, such as speeding during rainy weather or aggressive driving in poor visibility. Machine learning algorithms could continuously improve these models by incorporating historical accident data, making the predictions more accurate over time. This approach shifts accident prevention from a reactive to a proactive strategy, which could reduce the strain on healthcare systems and improve overall road safety.
+
+## Weaknesses and next steps
+
+One limitation of this analysis is that the dataset only includes observations up to 2023. While this offers a strong historical view on traffic accidents in Toronto, it does not account for more recent shifts in road usage, traffic enforcement, or driver behaviour that may have emerged after 2023. For example, new driving technologies, ride-sharing services, and updated traffic regulations could significantly influence accident rates, but these factors are not reflected in the current data. As a result, the findings may not fully align with recent trends, limiting their relevance for current and future policy decisions.
+
+A key area for future research involves the growing use of autonomous or driver-assist technologies, which are not yet covered by the dataset but could have a major impact on traffic accident patterns. As these technologies become more common, understanding their effect on traffic safety and accident severity will be essential. The lack of data on autonomous vehicles limits our ability to predict how these innovations might change accident trends. However, from the figure @fig-human-factor-trend-over-time, we see that accidents involving aggressive driving have decreased, possibly due to the rise of driver-assist features that reduce reckless behaviour. Future studies should incorporate data on autonomous vehicles and their interactions with human-driven cars to better understand how these advancements affect safety. This could help develop predictive models that account for both human and automated driving behaviours, providing important understanding for policymakers and urban planners as they adapt infrastructure and safety regulations for a future where both types of vehicles share the road.
+
+\newpage
+
+
+# References
+
+
